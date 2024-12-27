@@ -21,7 +21,7 @@ const Note: React.FC<NoteProps> = ({
   const [currentPosition, setCurrentPosition] = useState(position);
 
   const handleDrag = (_e: any, data: { x: number; y: number }) => {
-    setCurrentPosition({ x: Math.round(data.x), y: Math.round(data.y) });
+    setCurrentPosition({ x: data.x, y: data.y });
   };
 
   return (
@@ -34,7 +34,8 @@ const Note: React.FC<NoteProps> = ({
       <div className="sticky-note">
         <div className="note-header">
           <div className="coordinates">
-            x: {currentPosition.x}, y: {currentPosition.y}
+            x: {Math.round(currentPosition.x)}, y:{' '}
+            {Math.round(currentPosition.y)}
           </div>
           <button className="close-button" onClick={() => onClose(id)}>
             ×

@@ -18,7 +18,7 @@ const createShadowContainer = (): HTMLDivElement => {
   // Include both container and note styles
   style.textContent = `
     #react-root {
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
