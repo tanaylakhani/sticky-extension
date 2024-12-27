@@ -1,0 +1,49 @@
+.sticky-note {
+  position: fixed;
+  width: 200px;
+  min-height: 200px;
+  background: #feff9c;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 2147483647;
+}
+
+.sticky-header {
+  height: 20px;
+  margin-bottom: 10px;
+  cursor: move;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 20px;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
+.sticky-note textarea {
+  width: 100%;
+  height: calc(100% - 30px);
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.sticky-note textarea:focus {
+  outline: none;
+}
