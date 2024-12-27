@@ -18,8 +18,8 @@ const StickyNotesContainer: React.FC = () => {
     // Capture right-click coordinates
     const handleContextMenu = (e: MouseEvent) => {
       setLastClickCoords({
-        x: e.clientX,
-        y: e.clientY,
+        x: e.pageX,
+        y: e.pageY,
       });
     };
 
