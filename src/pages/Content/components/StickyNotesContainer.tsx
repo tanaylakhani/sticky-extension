@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import Note from './Note';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  fetchNotes,
+  createNote,
+  deleteNote,
+  updateNote,
+} from '../services/api';
 
 interface TipTapContent {
   type: string;
   content: Array<{
     type: string;
-    content: Array<{
+    content?: Array<{
       type: string;
-      text: string;
+      text?: string;
+      attrs?: {
+        src?: string;
+        alt?: string | null;
+        title?: string | null;
+      };
     }>;
   }>;
 }
@@ -20,23 +31,16 @@ interface StickyNote {
     y: number;
   };
   text: string | TipTapContent;
+  color: string;
 }
 
 const StickyNotesContainer: React.FC = () => {
   const [notes, setNotes] = useState<StickyNote[]>([]);
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
 
-  const fetchNotes = async () => {
+  const loadNotes = async () => {
     try {
-      const response = await fetch(
-        'http://localhost:3000/api/notes/v2/extension?code=p5yqdd'
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch notes');
-      }
-
-      const data = await response.json();
+      const data = await fetchNotes();
       // Convert server notes to local format
       const existingNotes = data
         .filter((note: any) => note.websiteUrl === window.location.href)
@@ -44,6 +48,7 @@ const StickyNotesContainer: React.FC = () => {
           id: note.data.id,
           position: note.data.position_on_webpage,
           text: note.data.data.content,
+          color: note.data.data.color,
         }));
 
       setNotes(existingNotes);
@@ -54,7 +59,7 @@ const StickyNotesContainer: React.FC = () => {
 
   // Fetch existing notes when component mounts
   useEffect(() => {
-    fetchNotes();
+    loadNotes();
   }, []);
 
   useEffect(() => {
@@ -94,37 +99,21 @@ const StickyNotesContainer: React.FC = () => {
         ],
       };
 
-      const response = await fetch(
-        'http://localhost:3000/api/notes/v2/extension',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      await createNote({
+        websiteUrl: window.location.href,
+        data: {
+          id: noteId,
+          type: 'note',
+          position: position,
+          positionAbsolute: position,
+          position_on_webpage: position,
+          data: {
+            content: content,
+            color: 'GREEN',
+            title: '',
           },
-          body: JSON.stringify({
-            code: 'p5yqdd',
-            note: {
-              websiteUrl: window.location.href,
-              data: {
-                id: noteId,
-                type: 'note',
-                position: position,
-                positionAbsolute: position,
-                position_on_webpage: position,
-                data: {
-                  content: content,
-                  color: 'GREEN',
-                  title: '',
-                },
-              },
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to create note on server');
-      }
+        },
+      });
 
       return true;
     } catch (error) {
@@ -146,7 +135,7 @@ const StickyNotesContainer: React.FC = () => {
           .then((success) => {
             if (success) {
               // Refetch all notes after successful creation
-              fetchNotes().then(() => {
+              loadNotes().then(() => {
                 sendResponse({ success: true });
               });
             } else {
@@ -169,28 +158,35 @@ const StickyNotesContainer: React.FC = () => {
 
   const handleClose = async (id: string) => {
     try {
-      const response = await fetch(
-        'http://localhost:3000/api/notes/v2/extension',
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code: 'p5yqdd',
-            noteId: id,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to delete note');
-      }
-
-      // Refetch notes after successful deletion
-      await fetchNotes();
+      await deleteNote(id);
+      await loadNotes();
     } catch (error) {
       console.error('Error deleting note:', error);
+    }
+  };
+
+  const handleColorChange = async (id: string, newColor: string) => {
+    try {
+      const note = notes.find((n) => n.id === id);
+      if (note) {
+        await updateNote(id, {
+          websiteUrl: window.location.href,
+          data: {
+            type: 'note',
+            position: note.position,
+            positionAbsolute: note.position,
+            position_on_webpage: note.position,
+            data: {
+              content: note.text,
+              color: newColor,
+              title: '',
+            },
+          },
+        });
+        await loadNotes();
+      }
+    } catch (error) {
+      console.error('Error updating note color:', error);
     }
   };
 
@@ -201,12 +197,10 @@ const StickyNotesContainer: React.FC = () => {
           key={note.id}
           id={note.id}
           position={note.position}
-          initialText={
-            typeof note.text === 'string'
-              ? note.text
-              : note.text.content[0]?.content[0]?.text || ''
-          }
+          initialText={note.text}
+          color={note.color}
           onClose={handleClose}
+          onColorChange={handleColorChange}
         />
       ))}
     </>

@@ -34,94 +34,150 @@ const createShadowContainer = (): HTMLDivElement => {
       position: absolute;
       width: 200px;
       min-height: 200px;
-      background: #feff9c;
-      padding: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 2px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      z-index: 2147483647;
-      user-select: none;
+      padding: 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    .sticky-note.focused {
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    .sticky-note * {
+      color: inherit;
     }
 
     .note-header {
-      height: 20px;
-      margin-bottom: 10px;
-      cursor: move;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
-      color: #666;
-      background: rgba(0, 0, 0, 0.05);
-      margin: -10px -10px 10px -10px;
-      padding: 5px 10px;
-      border-radius: 2px 2px 0 0;
+      padding: 12px;
+      cursor: move;
+      margin: 0;
+      border-radius: 12px 12px 0 0;
+      background-color: rgba(0, 0, 0, 0.05);
     }
 
+    .color-picker-button {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .color-picker-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .color-button {
+      width: 18px;
+      height: 18px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.2s;
+    }
+
+    .color-button:hover {
+      transform: scale(1.1);
+    }
+
+    .color-button.active {
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .color-button.GREEN { background-color: #acebbf; }
+    .color-button.BLUE { background-color: #a1d4fa; }
+    .color-button.RED { background-color: #ffa67e; }
+    .color-button.YELLOW { background-color: #ffcf7c; }
+    .color-button.PURPLE { background-color: #d8b8ff; }
+    .color-button.GRAY { background-color: #d2dce4; }
+
     .coordinates {
+      font-size: 12px;
+      color: #666;
       font-family: monospace;
-      padding: 2px 5px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 3px;
-      user-select: none;
     }
 
     .close-button {
       background: none;
       border: none;
-      color: #666;
-      font-size: 18px;
       cursor: pointer;
-      padding: 0 5px;
-      line-height: 20px;
-      transition: color 0.2s ease;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      transition: opacity 0.2s;
     }
 
     .close-button:hover {
-      color: #000;
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .close-button svg {
+      color: inherit;
     }
 
     .editor-toolbar {
       display: flex;
-      gap: 5px;
-      padding: 5px 10px;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      gap: 4px;
+      padding: 8px 12px;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
       margin-top: auto;
     }
 
     .toolbar-button {
       background: none;
       border: none;
-      color: #666;
+      padding: 4px;
       cursor: pointer;
-      padding: 5px;
-      border-radius: 3px;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .toolbar-button svg {
+      color: inherit;
     }
 
     .toolbar-button:hover {
-      background: rgba(0, 0, 0, 0.05);
-      color: #000;
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.05);
     }
 
     .toolbar-button.active {
-      background: rgba(0, 0, 0, 0.1);
-      color: #000;
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.1);
     }
 
     .ProseMirror {
       outline: none;
       min-height: 100px;
-      padding: 5px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 12px;
+      color: inherit;
+    }
+
+    .ProseMirror img {
+      max-width: 180px;
+      height: auto;
+      border-radius: 4px;
+      margin: 4px 0;
+      display: block;
+    }
+
+    .ProseMirror img.selected {
+      border: 2px solid currentColor;
     }
 
     .ProseMirror p {
@@ -131,11 +187,52 @@ const createShadowContainer = (): HTMLDivElement => {
 
     .ProseMirror ul {
       padding-left: 20px;
-      margin: 0;
+      margin: 4px 0;
     }
 
-    .ProseMirror-focused {
-      outline: none;
+    .ProseMirror li {
+      margin: 2px 0;
+    }
+
+    .ProseMirror-placeholder {
+      color: currentColor;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .focused {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Color-specific styles with text/icon colors */
+    .sticky-note.GREEN {
+      background-color: #acebbf;
+      color: #2a5a35;
+    }
+
+    .sticky-note.BLUE {
+      background-color: #a1d4fa;
+      color: #1a4971;
+    }
+
+    .sticky-note.RED {
+      background-color: #ffa67e;
+      color: #8b3f1d;
+    }
+
+    .sticky-note.YELLOW {
+      background-color: #ffcf7c;
+      color: #8b6534;
+    }
+
+    .sticky-note.PURPLE {
+      background-color: #d8b8ff;
+      color: #5b3a80;
+    }
+
+    .sticky-note.GRAY {
+      background-color: #d2dce4;
+      color: #3e4e5e;
     }
   `;
   shadowRoot.appendChild(style);
