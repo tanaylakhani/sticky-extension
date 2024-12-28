@@ -1,10 +1,15 @@
 # Sticky Notes Chrome Extension
 
-A Chrome extension that allows users to create draggable sticky notes anywhere on a webpage, with real-time synchronization to a backend server. Built with React and TypeScript.
+A Chrome extension that allows users to create draggable sticky notes anywhere on a webpage, with rich text editing capabilities and real-time synchronization to a backend server. Built with React, TypeScript, and TipTap.
 
 ## Features
 
 - **Context Menu Integration**: Right-click anywhere on a webpage to create a sticky note
+- **Rich Text Editing**: Full text formatting capabilities using TipTap editor
+  - Bold, Italic, Underline formatting
+  - Bullet lists
+  - Placeholder text
+  - Clean, minimal toolbar
 - **Drag and Drop**: Notes can be dragged around the page using their header
 - **Live Coordinates**: Real-time display of note positions (x, y coordinates)
 - **Text Selection**: Selected text automatically becomes note content
@@ -20,6 +25,7 @@ A Chrome extension that allows users to create draggable sticky notes anywhere o
 - Built using React 18 with TypeScript
 - Uses Shadow DOM for style isolation
 - Implements Chrome Extension Manifest V3
+- TipTap for rich text editing
 - Real-time server synchronization
 - URL-based note filtering
 
@@ -27,28 +33,31 @@ A Chrome extension that allows users to create draggable sticky notes anywhere o
 
 1. **Note Component** (`Note.tsx`)
 
-   - Draggable functionality using react-draggable
+   - Rich text editing with TipTap
+   - Formatting toolbar integration
+   - Draggable functionality
    - Position tracking
-   - Text input handling
    - Coordinate display
 
-2. **StickyNotesContainer** (`StickyNotesContainer.tsx`)
+2. **TipTap Component** (`Tiptap.tsx`)
+
+   - Custom TipTap editor implementation
+   - Rich text formatting
+   - Focus handling
+   - Content management
+
+3. **StickyNotesContainer** (`StickyNotesContainer.tsx`)
 
    - State management for all notes
-   - Server communication (fetch/create)
+   - Server communication (fetch/create/delete)
    - Handles Chrome message passing
    - URL-based note filtering
    - Real-time note updates
 
-3. **Background Script** (`Background/index.ts`)
+4. **Background Script** (`Background/index.ts`)
 
    - Context menu creation
    - Message passing to content script
-
-4. **Content Script** (`Content/index.tsx`)
-   - Shadow DOM setup
-   - React initialization
-   - Main container mounting
 
 ### API Integration
 
@@ -57,15 +66,40 @@ A Chrome extension that allows users to create draggable sticky notes anywhere o
   - Fetches all notes for current user
   - Filters notes by website URL
   - Returns note data including positions and content
+  - Query parameter: `code`
 
 - **POST /api/notes/v2/extension**
+
   - Creates new notes
   - Stores webpage-specific coordinates
-  - Maintains note position data for both extension and web app
+  - Maintains note position data
+  - Rich text content in TipTap format
+  - Request body includes:
+    - `code`
+    - `note` object with position and content
+
+- **DELETE /api/notes/v2/extension**
+  - Deletes specific notes
+  - Request body includes:
+    - `code`
+    - `noteId`
 
 ### Data Model
 
 ```typescript
+// TipTap Content Structure
+interface TipTapContent {
+  type: string;
+  content: Array<{
+    type: string;
+    content: Array<{
+      type: string;
+      text: string;
+    }>;
+  }>;
+}
+
+// Note Structure
 interface Note {
   id: string;
   data: {
@@ -75,7 +109,7 @@ interface Note {
     positionAbsolute: { x: number; y: number };
     position_on_webpage: { x: number; y: number };
     data: {
-      content: string;
+      content: TipTapContent;
       color: string;
       title: string;
     };
@@ -116,10 +150,12 @@ interface Note {
 1. Right-click anywhere on a webpage
 2. Select "Create Sticky" from the context menu
 3. If text was selected, it will appear in the note
-4. Drag notes by their header
-5. View real-time coordinates as you move notes
-6. Notes persist across page reloads
-7. Notes are specific to each webpage
+4. Use the formatting toolbar to style your text
+5. Drag notes by their header
+6. View real-time coordinates as you move notes
+7. Notes persist across page reloads
+8. Notes are specific to each webpage
+9. Click × to delete a note
 
 ## Technical Details
 
@@ -129,6 +165,7 @@ interface Note {
 - Real-time synchronization
 - URL-based note filtering
 - Automatic refetching on updates
+- Rich text state handling
 
 ### Event Handling
 
@@ -136,6 +173,7 @@ interface Note {
 - Mouse events for dragging
 - Chrome message passing
 - Server communication
+- Rich text editing events
 
 ### Styling
 
@@ -143,6 +181,7 @@ interface Note {
 - Modern, clean UI design
 - Draggable interface
 - Position-aware layout
+- Rich text formatting styles
 
 ## Future Enhancements
 
@@ -154,6 +193,11 @@ interface Note {
 - Keyboard shortcuts
 - Real-time collaboration
 - Note sharing between users
+- Additional rich text features
+  - Links
+  - Images
+  - Code blocks
+  - Tables
 
 ## Contributing
 

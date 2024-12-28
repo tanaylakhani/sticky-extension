@@ -41,6 +41,12 @@ const createShadowContainer = (): HTMLDivElement => {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       z-index: 2147483647;
       user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sticky-note.focused {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
 
     .note-header {
@@ -81,20 +87,54 @@ const createShadowContainer = (): HTMLDivElement => {
       color: #000;
     }
 
-    .sticky-note textarea {
-      width: 100%;
-      height: calc(100% - 30px);
-      border: none;
-      background: transparent;
-      resize: none;
-      font-family: inherit;
-      font-size: 14px;
-      line-height: 1.4;
-      color: #333;
-      user-select: text;
+    .editor-toolbar {
+      display: flex;
+      gap: 5px;
+      padding: 5px 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      margin-top: auto;
     }
 
-    .sticky-note textarea:focus {
+    .toolbar-button {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toolbar-button:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: #000;
+    }
+
+    .toolbar-button.active {
+      background: rgba(0, 0, 0, 0.1);
+      color: #000;
+    }
+
+    .ProseMirror {
+      outline: none;
+      min-height: 100px;
+      padding: 5px;
+    }
+
+    .ProseMirror p {
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .ProseMirror ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .ProseMirror-focused {
       outline: none;
     }
   `;

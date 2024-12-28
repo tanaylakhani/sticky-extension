@@ -2,13 +2,24 @@ import React, { useState, useEffect } from 'react';
 import Note from './Note';
 import { v4 as uuidv4 } from 'uuid';
 
+interface TipTapContent {
+  type: string;
+  content: Array<{
+    type: string;
+    content: Array<{
+      type: string;
+      text: string;
+    }>;
+  }>;
+}
+
 interface StickyNote {
   id: string;
   position: {
     x: number;
     y: number;
   };
-  text: string;
+  text: string | TipTapContent;
 }
 
 const StickyNotesContainer: React.FC = () => {
@@ -67,6 +78,22 @@ const StickyNotesContainer: React.FC = () => {
         y: lastClickCoords.y - 10,
       };
 
+      // Create TipTap JSON content
+      const content: TipTapContent = {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: text,
+              },
+            ],
+          },
+        ],
+      };
+
       const response = await fetch(
         'http://localhost:3000/api/notes/v2/extension',
         {
@@ -85,7 +112,7 @@ const StickyNotesContainer: React.FC = () => {
                 positionAbsolute: position,
                 position_on_webpage: position,
                 data: {
-                  content: text,
+                  content: content,
                   color: 'GREEN',
                   title: '',
                 },
@@ -140,8 +167,31 @@ const StickyNotesContainer: React.FC = () => {
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [lastClickCoords]);
 
-  const handleClose = (id: string) => {
-    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== id));
+  const handleClose = async (id: string) => {
+    try {
+      const response = await fetch(
+        'http://localhost:3000/api/notes/v2/extension',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            code: 'p5yqdd',
+            noteId: id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete note');
+      }
+
+      // Refetch notes after successful deletion
+      await fetchNotes();
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
   };
 
   return (
@@ -151,7 +201,11 @@ const StickyNotesContainer: React.FC = () => {
           key={note.id}
           id={note.id}
           position={note.position}
-          initialText={note.text}
+          initialText={
+            typeof note.text === 'string'
+              ? note.text
+              : note.text.content[0]?.content[0]?.text || ''
+          }
           onClose={handleClose}
         />
       ))}
