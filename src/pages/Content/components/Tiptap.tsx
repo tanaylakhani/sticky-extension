@@ -103,7 +103,7 @@ const Tiptap: React.FC<TiptapProps> = ({
           onClick={removeImage}
           style={{
             position: 'absolute',
-            top: '4px',
+            top: '10px',
             right: '32px',
             padding: '4px',
             borderRadius: '4px',
