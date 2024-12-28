@@ -15,36 +15,34 @@ const StickyNotesContainer: React.FC = () => {
   const [notes, setNotes] = useState<StickyNote[]>([]);
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
 
+  const fetchNotes = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:3000/api/notes/v2/extension?code=p5yqdd'
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch notes');
+      }
+
+      const data = await response.json();
+      // Convert server notes to local format
+      const existingNotes = data
+        .filter((note: any) => note.websiteUrl === window.location.href)
+        .map((note: any) => ({
+          id: note.data.id,
+          position: note.data.position_on_webpage,
+          text: note.data.data.content,
+        }));
+
+      setNotes(existingNotes);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
+  };
+
   // Fetch existing notes when component mounts
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const response = await fetch(
-          'http://localhost:3000/api/notes/v2/extension?code=p5yqdd'
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch notes');
-        }
-
-        const data = await response.json();
-        console.log(data);
-        // Convert server notes to local format
-        const existingNotes = data
-          .filter((note: any) => note.websiteUrl === window.location.href)
-          .map((note: any) => ({
-            id: note.data.id,
-            position: note.data.position_on_webpage,
-            text: note.data.data.content,
-          }));
-        console.log(existingNotes);
-
-        setNotes(existingNotes);
-      } catch (error) {
-        console.error('Error fetching notes:', error);
-      }
-    };
-
     fetchNotes();
   }, []);
 
@@ -101,10 +99,10 @@ const StickyNotesContainer: React.FC = () => {
         throw new Error('Failed to create note on server');
       }
 
-      return await response.json();
+      return true;
     } catch (error) {
       console.error('Error creating note:', error);
-      return null;
+      return false;
     }
   };
 
@@ -118,19 +116,12 @@ const StickyNotesContainer: React.FC = () => {
       if (message.type === 'CREATE_STICKY') {
         // Create note on server first
         createNoteOnServer(message.data.text || '')
-          .then((serverResponse) => {
-            if (serverResponse) {
-              const newNote: StickyNote = {
-                id: serverResponse.data.id,
-                position: {
-                  x: lastClickCoords.x - 10,
-                  y: lastClickCoords.y - 10,
-                },
-                text: message.data.text || '',
-              };
-
-              setNotes((prevNotes) => [...prevNotes, newNote]);
-              sendResponse({ success: true });
+          .then((success) => {
+            if (success) {
+              // Refetch all notes after successful creation
+              fetchNotes().then(() => {
+                sendResponse({ success: true });
+              });
             } else {
               sendResponse({ success: false });
             }
