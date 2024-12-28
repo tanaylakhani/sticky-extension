@@ -9,6 +9,7 @@
     "default_icon": "icon-34.png"
   },
   "permissions": ["contextMenus"],
+  "host_permissions": ["http://localhost:3000/*"],
   "icons": {
     "128": "icon-128.png"
   },
