@@ -64,6 +64,15 @@ const Note: React.FC<NoteProps> = ({
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
+  const colorMap = {
+    GREEN: '#2a5a35',
+    BLUE: '#1a4971',
+    RED: '#8b3f1d',
+    YELLOW: '#8b6534',
+    PURPLE: '#5b3a80',
+    GRAY: '#3e4e5e',
+  };
+
   // Convert string content to TipTap JSON format or use existing JSON content
   const initialContent =
     typeof initialText === 'string'
@@ -170,7 +179,9 @@ const Note: React.FC<NoteProps> = ({
           <button
             className="color-picker-button"
             onClick={handleColorClick}
-            style={{ backgroundColor: color.toLowerCase() }}
+            style={{
+              backgroundColor: colorMap[color as keyof typeof colorMap],
+            }}
             title="Change color"
           />
           <button className="close-button" onClick={() => onClose(id)}>

@@ -1,108 +1,129 @@
-import React, { forwardRef, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { EditorContent, Editor } from '@tiptap/react';
-import { extractPublicIdFromUrl } from '../utils/imageUtils';
 import { FaTimesCircle } from 'react-icons/fa';
 import { deleteImage } from '../services/api';
+import { extractPublicIdFromUrl } from '../utils/imageUtils';
 
 interface TiptapProps {
   editor: Editor;
   setIsTextAreaInFocus: (value: boolean) => void;
-  data: any;
+  data: {
+    content: any;
+  };
   color: string;
   id: string;
 }
 
-const Tiptap = forwardRef<HTMLDivElement, TiptapProps>(
-  ({ editor, setIsTextAreaInFocus, data, color, id }, ref) => {
-    const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(
-      null
-    );
+const Tiptap: React.FC<TiptapProps> = ({
+  editor,
+  setIsTextAreaInFocus,
+  data,
+  color,
+  id,
+}) => {
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(
+    null
+  );
 
-    const handleImageSelection = () => {
-      setSelectedImage(null);
-      if (!editor) return;
-      const { view, state } = editor;
-      const { from } = state.selection;
-      const node = view.nodeDOM(from) as HTMLElement;
-      if (!node) return;
-      if (node?.tagName === 'IMG') {
-        setSelectedImage(node as HTMLImageElement);
-        node.style.border = `2px solid ${color}`;
-        node.style.borderRadius = '6px';
-      } else {
-        if (selectedImage) {
-          selectedImage.style.border = 'none';
-          selectedImage.style.borderRadius = '0';
-        }
-      }
+  useEffect(() => {
+    const handleKeyDown = (e: Event) => {
+      e.stopPropagation();
     };
 
-    const removeImage = useCallback(() => {
-      if (!editor || !selectedImage) return;
-
-      const imageUrl = selectedImage.getAttribute('src');
-      if (imageUrl) {
-        const publicId = extractPublicIdFromUrl(imageUrl);
-        deleteImage(publicId).catch((error) => {
-          console.error('Error deleting image:', error);
-        });
-      }
-
-      const { state, view } = editor;
-      const { from, to } = state.selection;
-      view.dispatch(view.state.tr.delete(from, to));
-      setSelectedImage(null);
-    }, [editor, selectedImage]);
-
-    if (!editor) {
-      return null;
+    const editorElement = document.querySelector(`[data-note-id="${id}"]`);
+    if (editorElement) {
+      editorElement.addEventListener('keydown', handleKeyDown, true);
+      editorElement.addEventListener('keyup', handleKeyDown, true);
+      editorElement.addEventListener('keypress', handleKeyDown, true);
     }
 
-    editor.on('update', ({ editor }) => {
-      const newValue = editor.getJSON();
-      // Update note content here if needed
-      console.log('Content updated:', newValue);
-    });
+    return () => {
+      if (editorElement) {
+        editorElement.removeEventListener('keydown', handleKeyDown, true);
+        editorElement.removeEventListener('keyup', handleKeyDown, true);
+        editorElement.removeEventListener('keypress', handleKeyDown, true);
+      }
+    };
+  }, [id]);
 
-    editor.on('selectionUpdate', handleImageSelection);
+  const handleImageSelection = useCallback(() => {
+    setSelectedImage(null);
+    if (!editor) return;
+    const { view, state } = editor;
+    const { from } = state.selection;
+    const node = view.nodeDOM(from) as HTMLElement;
+    if (!node) return;
+    if (node?.tagName === 'IMG') {
+      setSelectedImage(node as HTMLImageElement);
+      node.style.border = `2px solid ${color}`;
+      node.style.borderRadius = '6px';
+    } else {
+      if (selectedImage) {
+        selectedImage.style.border = 'none';
+        selectedImage.style.borderRadius = '0';
+      }
+    }
+  }, [editor, selectedImage, color]);
 
-    return (
-      <div className="nodrag h-[70%]" style={{ userSelect: 'text' }}>
-        {selectedImage && (
-          <button
-            onClick={removeImage}
-            style={{
-              position: 'absolute',
-              top: '4px',
-              right: '32px',
-              padding: '4px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              color: color,
-              background: 'none',
-              border: 'none',
-            }}
-          >
-            <FaTimesCircle size={16} />
-          </button>
-        )}
-        <EditorContent
-          onClick={() => editor.commands.focus()}
-          onDragStart={(event) => event.preventDefault()}
-          className="max-h-full overflow-y-auto w-full resize-none bg-transparent px-4 text-sm focus:outline-none"
-          editor={editor}
-          onFocus={() => setIsTextAreaInFocus(true)}
-          onBlur={() => setIsTextAreaInFocus(false)}
+  const removeImage = useCallback(() => {
+    if (!editor || !selectedImage) return;
+
+    const imageUrl = selectedImage.getAttribute('src');
+    if (imageUrl) {
+      const publicId = extractPublicIdFromUrl(imageUrl);
+      deleteImage(publicId).catch((error) => {
+        console.error('Error deleting image:', error);
+      });
+    }
+
+    const { state, view } = editor;
+    const { from, to } = state.selection;
+    view.dispatch(view.state.tr.delete(from, to));
+    setSelectedImage(null);
+  }, [editor, selectedImage]);
+
+  useEffect(() => {
+    if (editor) {
+      editor.on('selectionUpdate', handleImageSelection);
+      return () => {
+        editor.off('selectionUpdate', handleImageSelection);
+      };
+    }
+  }, [editor, handleImageSelection]);
+
+  return (
+    <div
+      className="editor-container"
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
+    >
+      {selectedImage && (
+        <button
+          onClick={removeImage}
           style={{
-            color: 'inherit',
-            minHeight: '100px',
+            position: 'absolute',
+            top: '4px',
+            right: '32px',
+            padding: '4px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            color: color,
+            background: 'none',
+            border: 'none',
           }}
-        />
-      </div>
-    );
-  }
-);
-
-Tiptap.displayName = 'Tiptap';
+        >
+          <FaTimesCircle size={16} />
+        </button>
+      )}
+      <EditorContent
+        editor={editor}
+        data-note-id={id}
+        onFocus={() => setIsTextAreaInFocus(true)}
+        onBlur={() => setIsTextAreaInFocus(false)}
+      />
+    </div>
+  );
+};
 
 export default Tiptap;
