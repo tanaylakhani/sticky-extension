@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Note from './Note';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  fetchNotes,
-  createNote,
-  updateNote,
-  fetchBoards,
-} from '../../../services/api';
+import { fetchNotes, createNote, fetchBoards } from '../../../services/api';
 import { StickyNote, TipTapContent } from '../../../types';
 
 interface Board {
@@ -81,8 +76,13 @@ const StickyNotesContainer: React.FC = () => {
         ],
       };
 
+      const { lastSelectedBoardId } = await chrome.storage.local.get(
+        'lastSelectedBoardId'
+      );
+
       await createNote({
         websiteUrl: window.location.href,
+        boardId: lastSelectedBoardId || null,
         data: {
           id: noteId,
           type: 'note',

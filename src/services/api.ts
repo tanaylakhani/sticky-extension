@@ -17,6 +17,7 @@ interface NoteData {
 
 interface CreateNoteRequest {
   websiteUrl: string;
+  boardId: string;
   data: NoteData;
 }
 
