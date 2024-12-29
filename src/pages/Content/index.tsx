@@ -58,6 +58,67 @@ const createShadowContainer = (): HTMLDivElement => {
       background-color: rgba(0, 0, 0, 0.05);
     }
 
+    .note-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-menu-container {
+      position: relative;
+    }
+
+    .board-menu-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .board-menu-button:hover {
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .board-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      min-width: 150px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .board-menu-item {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      transition: background-color 0.2s;
+    }
+
+    .board-menu-item:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .board-menu-item.active {
+      background-color: rgba(0, 0, 0, 0.1);
+      font-weight: 500;
+    }
+
     .color-picker-button {
       width: 20px;
       height: 20px;

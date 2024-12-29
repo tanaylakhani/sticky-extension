@@ -7,6 +7,7 @@ interface NoteData {
   position: { x: number; y: number };
   positionAbsolute: { x: number; y: number };
   position_on_webpage: { x: number; y: number };
+  boardId?: string;
   data: {
     content: any;
     color: string;
@@ -21,13 +22,12 @@ interface CreateNoteRequest {
 
 interface UpdateNoteRequest {
   websiteUrl: string;
+  boardId?: string;
   data: Partial<NoteData>;
 }
 
 export const fetchNotes = async () => {
-  const response = await fetch(
-    `${API_BASE_URL}/notes/v2/extension?code=${CODE}`
-  );
+  const response = await fetch(`${API_BASE_URL}/extension/notes?code=${CODE}`);
   if (!response.ok) {
     throw new Error('Failed to fetch notes');
   }
@@ -35,7 +35,7 @@ export const fetchNotes = async () => {
 };
 
 export const createNote = async (noteData: CreateNoteRequest) => {
-  const response = await fetch(`${API_BASE_URL}/notes/v2/extension`, {
+  const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export const updateNote = async (
   noteId: string,
   noteData: UpdateNoteRequest
 ) => {
-  const response = await fetch(`${API_BASE_URL}/notes/v2/extension`, {
+  const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export const updateNote = async (
 };
 
 export const deleteNote = async (noteId: string) => {
-  const response = await fetch(`${API_BASE_URL}/notes/v2/extension`, {
+  const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -128,5 +128,13 @@ export const deleteImage = async (publicId: string) => {
     throw new Error('Failed to delete image');
   }
 
+  return response.json();
+};
+
+export const fetchBoards = async () => {
+  const response = await fetch(`${API_BASE_URL}/extension/boards?code=${CODE}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch boards');
+  }
   return response.json();
 };

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -17,10 +17,17 @@ import {
   FaUnderline,
   FaImage,
   FaTrash,
+  FaEllipsisV,
 } from 'react-icons/fa';
 import Tiptap from './Tiptap';
-import { uploadImage, updateNote } from '../services/api';
+import { uploadImage, updateNote, deleteNote } from '../services/api';
 import debounce from 'lodash/debounce';
+import { StickyNote } from '../../../types';
+
+interface Board {
+  id: string;
+  name: string;
+}
 
 interface NoteProps {
   id: string;
@@ -45,22 +52,23 @@ interface NoteProps {
     x: number;
     y: number;
   };
-  onClose: (id: string) => void;
   color?: string;
-  onColorChange?: (id: string, color: string) => void;
+  loadNotes: () => Promise<void>;
+  note: StickyNote;
+  boards: Board[];
 }
 
 const Note: React.FC<NoteProps> = ({
-  id,
   initialText = '',
-  position,
-  onClose,
-  color = 'GREEN',
-  onColorChange,
+  loadNotes,
+  note,
+  boards,
 }) => {
   const [isTextAreaInFocus, setIsTextAreaInFocus] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState(position);
+  const [currentPosition, setCurrentPosition] = useState(note.position);
+  const [showBoardMenu, setShowBoardMenu] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
@@ -71,6 +79,31 @@ const Note: React.FC<NoteProps> = ({
     YELLOW: '#8b6534',
     PURPLE: '#5b3a80',
     GRAY: '#3e4e5e',
+  };
+
+  const handleBoardSelect = async (boardId: string) => {
+    console.log('updating board', boardId);
+    try {
+      await updateNote(note.id, {
+        websiteUrl: window.location.href,
+        boardId,
+        data: {
+          type: 'note',
+          position: currentPosition,
+          positionAbsolute: currentPosition,
+          position_on_webpage: currentPosition,
+          data: {
+            content: editor?.getJSON(),
+            color: note.color,
+            title: '',
+          },
+        },
+      });
+      await loadNotes();
+      setShowBoardMenu(false);
+    } catch (error) {
+      console.error('Error updating note board:', error);
+    }
   };
 
   // Convert string content to TipTap JSON format or use existing JSON content
@@ -92,17 +125,11 @@ const Note: React.FC<NoteProps> = ({
         }
       : { type: 'doc', content: initialText.content };
 
-  const handleColorClick = () => {
-    const currentIndex = colors.indexOf(color);
-    const nextIndex = (currentIndex + 1) % colors.length;
-    onColorChange?.(id, colors[nextIndex]);
-  };
-
   // Debounced update function to prevent too many API calls
   const debouncedUpdate = useCallback(
     debounce(async (content: any, position: { x: number; y: number }) => {
       try {
-        await updateNote(id, {
+        await updateNote(note.id, {
           websiteUrl: window.location.href,
           data: {
             type: 'note',
@@ -111,16 +138,17 @@ const Note: React.FC<NoteProps> = ({
             position_on_webpage: position,
             data: {
               content: content,
-              color: color,
+              color: note.color,
               title: '',
             },
           },
         });
+        loadNotes();
       } catch (error) {
         console.error('Error updating note:', error);
       }
     }, 1000),
-    [id, color]
+    [note.id, note.color]
   );
 
   const editor = useEditor({
@@ -164,27 +192,95 @@ const Note: React.FC<NoteProps> = ({
     }
   };
 
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await deleteNote(id);
+      await loadNotes();
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
+  };
+
+  const handleColorChange = async (id: string, newColor: string) => {
+    try {
+      await updateNote(id, {
+        websiteUrl: window.location.href,
+        data: {
+          type: 'note',
+          position: note.position,
+          positionAbsolute: note.position,
+          position_on_webpage: note.position,
+          data: {
+            content: note.text,
+            color: newColor,
+            title: '',
+          },
+        },
+      });
+      await loadNotes();
+    } catch (error) {
+      console.error('Error updating note color:', error);
+    }
+  };
+
+  const handleColorClick = () => {
+    const currentIndex = colors.indexOf(note.color);
+    const nextIndex = (currentIndex + 1) % colors.length;
+    handleColorChange(note.id, colors[nextIndex]);
+  };
+
   return (
     <Draggable
       handle=".note-header"
-      defaultPosition={position}
+      defaultPosition={note.position}
       onDrag={handleDrag}
       bounds="body"
     >
       <div
         ref={noteRef}
-        className={`sticky-note ${color} ${isTextAreaInFocus ? 'focused' : ''}`}
+        className={`sticky-note ${note.color} ${
+          isTextAreaInFocus ? 'focused' : ''
+        }`}
       >
         <div className="note-header">
+          <div className="note-header-left">
+            <button
+              className="color-picker-button"
+              onClick={handleColorClick}
+              style={{
+                backgroundColor: colorMap[note.color as keyof typeof colorMap],
+              }}
+              title="Change color"
+            />
+            <div className="board-menu-container" ref={menuRef}>
+              <button
+                className="board-menu-button"
+                onClick={() => setShowBoardMenu(!showBoardMenu)}
+                title="Select board"
+              >
+                <FaEllipsisV />
+              </button>
+              {showBoardMenu && (
+                <div className="board-menu">
+                  {boards.map((board) => (
+                    <button
+                      key={board.id}
+                      className={`board-menu-item ${
+                        note.boardId === board.id ? 'active' : ''
+                      }`}
+                      onClick={() => handleBoardSelect(board.id)}
+                    >
+                      {board.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <button
-            className="color-picker-button"
-            onClick={handleColorClick}
-            style={{
-              backgroundColor: colorMap[color as keyof typeof colorMap],
-            }}
-            title="Change color"
-          />
-          <button className="close-button" onClick={() => onClose(id)}>
+            className="close-button"
+            onClick={() => handleDeleteNote(note.id)}
+          >
             <FaTrash />
           </button>
         </div>
@@ -196,7 +292,7 @@ const Note: React.FC<NoteProps> = ({
               setIsTextAreaInFocus={setIsTextAreaInFocus}
               data={{ content: initialContent }}
               color="inherit"
-              id={id}
+              id={note.id}
             />
             <div className="editor-toolbar">
               <button

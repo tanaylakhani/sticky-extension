@@ -4,35 +4,14 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   fetchNotes,
   createNote,
-  deleteNote,
   updateNote,
+  fetchBoards,
 } from '../services/api';
+import { StickyNote, TipTapContent } from '../../../types';
 
-interface TipTapContent {
-  type: string;
-  content: Array<{
-    type: string;
-    content?: Array<{
-      type: string;
-      text?: string;
-      attrs?: {
-        src?: string;
-        alt?: string | null;
-        title?: string | null;
-      };
-    }>;
-  }>;
-}
-
-interface StickyNote {
+interface Board {
   id: string;
-  websiteUrl: string;
-  position: {
-    x: number;
-    y: number;
-  };
-  text: string | TipTapContent;
-  color: string;
+  name: string;
 }
 
 const StickyNotesContainer: React.FC = () => {
@@ -40,6 +19,20 @@ const StickyNotesContainer: React.FC = () => {
   const [notesToRender, setNotesToRender] = useState<StickyNote[]>([]);
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
   const [currentUrl, setCurrentUrl] = useState('');
+  const [boards, setBoards] = useState<Board[]>([]);
+
+  const loadBoards = async () => {
+    try {
+      const data = await fetchBoards();
+      const formattedBoards = data.map((board: any) => ({
+        id: board._id,
+        name: board.boardName,
+      }));
+      setBoards(formattedBoards);
+    } catch (error) {
+      console.error('Error fetching boards:', error);
+    }
+  };
 
   const loadNotes = async () => {
     try {
@@ -51,6 +44,7 @@ const StickyNotesContainer: React.FC = () => {
         text: note.data.data.content,
         color: note.data.data.color,
         websiteUrl: note.websiteUrl,
+        boardId: note.boardId,
       }));
       setNotes(notes);
 
@@ -110,40 +104,6 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
-  const handleDeleteNote = async (id: string) => {
-    try {
-      await deleteNote(id);
-      await loadNotes();
-    } catch (error) {
-      console.error('Error deleting note:', error);
-    }
-  };
-
-  const handleColorChange = async (id: string, newColor: string) => {
-    try {
-      const note = notes.find((n) => n.id === id);
-      if (note) {
-        await updateNote(id, {
-          websiteUrl: window.location.href,
-          data: {
-            type: 'note',
-            position: note.position,
-            positionAbsolute: note.position,
-            position_on_webpage: note.position,
-            data: {
-              content: note.text,
-              color: newColor,
-              title: '',
-            },
-          },
-        });
-        await loadNotes();
-      }
-    } catch (error) {
-      console.error('Error updating note color:', error);
-    }
-  };
-
   useEffect(() => {
     // Handle messages from background script
     const messageListener = (
@@ -184,6 +144,7 @@ const StickyNotesContainer: React.FC = () => {
 
   useEffect(() => {
     loadNotes();
+    loadBoards();
 
     // Capture right-click coordinates
     const handleContextMenu = (e: MouseEvent) => {
@@ -210,8 +171,9 @@ const StickyNotesContainer: React.FC = () => {
           position={note.position}
           initialText={note.text}
           color={note.color}
-          onClose={handleDeleteNote}
-          onColorChange={handleColorChange}
+          loadNotes={loadNotes}
+          note={note}
+          boards={boards}
         />
       ))}
     </>
