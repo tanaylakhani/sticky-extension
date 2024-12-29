@@ -69,11 +69,14 @@ const Tiptap: React.FC<TiptapProps> = ({
     if (!editor || !selectedImage) return;
 
     const imageUrl = selectedImage.getAttribute('src');
+    console.log('imageUrl', imageUrl);
     if (imageUrl) {
       const publicId = extractPublicIdFromUrl(imageUrl);
-      deleteImage(publicId).catch((error) => {
-        console.error('Error deleting image:', error);
-      });
+      if (publicId) {
+        deleteImage(publicId).catch((error) => {
+          console.error('Error deleting image:', error);
+        });
+      }
     }
 
     const { state, view } = editor;
