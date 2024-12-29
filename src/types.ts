@@ -25,3 +25,8 @@ export interface TipTapContent {
     }>;
   }>;
 }
+
+export interface Board {
+  _id: string;
+  boardName: string;
+}

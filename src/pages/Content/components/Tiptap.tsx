@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { EditorContent, Editor } from '@tiptap/react';
 import { FaTimesCircle } from 'react-icons/fa';
-import { deleteImage } from '../services/api';
+import { deleteImage } from '../../../services/api';
 import { extractPublicIdFromUrl } from '../utils/imageUtils';
 
 interface TiptapProps {

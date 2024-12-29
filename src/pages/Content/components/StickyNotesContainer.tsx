@@ -6,7 +6,7 @@ import {
   createNote,
   updateNote,
   fetchBoards,
-} from '../services/api';
+} from '../../../services/api';
 import { StickyNote, TipTapContent } from '../../../types';
 
 interface Board {

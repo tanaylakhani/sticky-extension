@@ -20,7 +20,7 @@ import {
   FaEllipsisV,
 } from 'react-icons/fa';
 import Tiptap from './Tiptap';
-import { uploadImage, updateNote, deleteNote } from '../services/api';
+import { uploadImage, updateNote, deleteNote } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
 
@@ -82,7 +82,6 @@ const Note: React.FC<NoteProps> = ({
   };
 
   const handleBoardSelect = async (boardId: string) => {
-    console.log('updating board', boardId);
     try {
       await updateNote(note.id, {
         websiteUrl: window.location.href,
@@ -99,6 +98,7 @@ const Note: React.FC<NoteProps> = ({
           },
         },
       });
+      chrome.storage.local.set({ lastSelectedBoardId: boardId });
       await loadNotes();
       setShowBoardMenu(false);
     } catch (error) {
