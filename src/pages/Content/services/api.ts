@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3008/api';
 const CODE = 'p5yqdd';
 
 interface NoteData {

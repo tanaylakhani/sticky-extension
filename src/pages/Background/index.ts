@@ -5,7 +5,6 @@ type CreateStickyMessage = {
   };
 };
 
-// Create context menu when extension is installed
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'createSticky',
@@ -14,7 +13,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(
   (info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab | undefined) => {
     if (info.menuItemId === 'createSticky' && tab?.id) {
@@ -30,3 +28,12 @@ chrome.contextMenus.onClicked.addListener(
     }
   }
 );
+
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  if (changeInfo.url) {
+    chrome.tabs.sendMessage(tabId, {
+      type: 'UPDATE_URL',
+      data: { url: changeInfo.url },
+    });
+  }
+});

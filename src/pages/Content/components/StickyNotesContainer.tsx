@@ -26,6 +26,7 @@ interface TipTapContent {
 
 interface StickyNote {
   id: string;
+  websiteUrl: string;
   position: {
     x: number;
     y: number;
@@ -36,44 +37,31 @@ interface StickyNote {
 
 const StickyNotesContainer: React.FC = () => {
   const [notes, setNotes] = useState<StickyNote[]>([]);
+  const [notesToRender, setNotesToRender] = useState<StickyNote[]>([]);
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
+  const [currentUrl, setCurrentUrl] = useState('');
 
   const loadNotes = async () => {
     try {
       const data = await fetchNotes();
-      // Convert server notes to local format
-      const existingNotes = data
-        .filter((note: any) => note.websiteUrl === window.location.href)
-        .map((note: any) => ({
-          id: note.data.id,
-          position: note.data.position_on_webpage,
-          text: note.data.data.content,
-          color: note.data.data.color,
-        }));
 
-      setNotes(existingNotes);
+      const notes = data.map((note: any) => ({
+        id: note.data.id,
+        position: note.data.position_on_webpage,
+        text: note.data.data.content,
+        color: note.data.data.color,
+        websiteUrl: note.websiteUrl,
+      }));
+      setNotes(notes);
+
+      const notesForCurrentUrl = notes.filter(
+        (note: any) => note.websiteUrl === window.location.href
+      );
+      setNotesToRender(notesForCurrentUrl);
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
   };
-
-  // Fetch existing notes when component mounts
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
-  useEffect(() => {
-    // Capture right-click coordinates
-    const handleContextMenu = (e: MouseEvent) => {
-      setLastClickCoords({
-        x: e.pageX,
-        y: e.pageY,
-      });
-    };
-
-    document.addEventListener('contextmenu', handleContextMenu);
-    return () => document.removeEventListener('contextmenu', handleContextMenu);
-  }, []);
 
   const createNoteOnServer = async (text: string) => {
     try {
@@ -122,41 +110,7 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // Handle messages from background script
-    const messageListener = (
-      message: { type: string; data: { text: string } },
-      sender: chrome.runtime.MessageSender,
-      sendResponse: (response?: any) => void
-    ) => {
-      if (message.type === 'CREATE_STICKY') {
-        // Create note on server first
-        createNoteOnServer(message.data.text || '')
-          .then((success) => {
-            if (success) {
-              // Refetch all notes after successful creation
-              loadNotes().then(() => {
-                sendResponse({ success: true });
-              });
-            } else {
-              sendResponse({ success: false });
-            }
-          })
-          .catch((error) => {
-            console.error('Error handling message:', error);
-            sendResponse({ success: false });
-          });
-
-        // Return true to indicate we will send response asynchronously
-        return true;
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(messageListener);
-    return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, [lastClickCoords]);
-
-  const handleClose = async (id: string) => {
+  const handleDeleteNote = async (id: string) => {
     try {
       await deleteNote(id);
       await loadNotes();
@@ -190,16 +144,73 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Handle messages from background script
+    const messageListener = (
+      message: { type: string; data: { text?: string; url?: string } },
+      sender: chrome.runtime.MessageSender,
+      sendResponse: (response?: any) => void
+    ) => {
+      if (message.type === 'CREATE_STICKY') {
+        // Create note on server first
+        createNoteOnServer(message.data.text || '')
+          .then((success) => {
+            if (success) {
+              // Refetch all notes after successful creation
+              loadNotes().then(() => {
+                sendResponse({ success: true });
+              });
+            } else {
+              sendResponse({ success: false });
+            }
+          })
+          .catch((error) => {
+            console.error('Error handling message:', error);
+            sendResponse({ success: false });
+          });
+
+        // Return true to indicate we will send response asynchronously
+        return true;
+      }
+
+      if (message.type === 'UPDATE_URL') {
+        setCurrentUrl(message.data.url || '');
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(messageListener);
+    return () => chrome.runtime.onMessage.removeListener(messageListener);
+  }, [lastClickCoords]);
+
+  useEffect(() => {
+    loadNotes();
+
+    // Capture right-click coordinates
+    const handleContextMenu = (e: MouseEvent) => {
+      setLastClickCoords({
+        x: e.pageX,
+        y: e.pageY,
+      });
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => document.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
+
+  useEffect(() => {
+    setNotesToRender(notes.filter((note) => note.websiteUrl === currentUrl));
+  }, [currentUrl]);
+
   return (
     <>
-      {notes.map((note) => (
+      {notesToRender.map((note) => (
         <Note
           key={note.id}
           id={note.id}
           position={note.position}
           initialText={note.text}
           color={note.color}
-          onClose={handleClose}
+          onClose={handleDeleteNote}
           onColorChange={handleColorChange}
         />
       ))}

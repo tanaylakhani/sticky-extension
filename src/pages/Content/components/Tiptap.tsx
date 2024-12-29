@@ -69,7 +69,6 @@ const Tiptap: React.FC<TiptapProps> = ({
     if (!editor || !selectedImage) return;
 
     const imageUrl = selectedImage.getAttribute('src');
-    console.log('imageUrl', imageUrl);
     if (imageUrl) {
       const publicId = extractPublicIdFromUrl(imageUrl);
       if (publicId) {
