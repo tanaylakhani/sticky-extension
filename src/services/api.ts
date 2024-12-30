@@ -1,5 +1,5 @@
-const API_BASE_URL = 'http://localhost:3008/api';
-const CODE = 'p5yqdd';
+// const API_BASE_URL = 'http://localhost:3008/api';
+const API_BASE_URL = 'https://sticky-staging-web.vercel.app/api';
 
 interface NoteData {
   id: string;
@@ -28,7 +28,8 @@ interface UpdateNoteRequest {
 }
 
 export const fetchNotes = async () => {
-  const response = await fetch(`${API_BASE_URL}/extension/notes?code=${CODE}`);
+  const { code } = await chrome.storage.local.get('code');
+  const response = await fetch(`${API_BASE_URL}/extension/notes?code=${code}`);
   if (!response.ok) {
     throw new Error('Failed to fetch notes');
   }
@@ -36,13 +37,14 @@ export const fetchNotes = async () => {
 };
 
 export const createNote = async (noteData: CreateNoteRequest) => {
+  const { code } = await chrome.storage.local.get('code');
   const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      code: CODE,
+      code,
       note: noteData,
     }),
   });
@@ -58,13 +60,14 @@ export const updateNote = async (
   noteId: string,
   noteData: UpdateNoteRequest
 ) => {
+  const { code } = await chrome.storage.local.get('code');
   const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      code: CODE,
+      code,
       note: {
         ...noteData,
         data: {
@@ -83,13 +86,14 @@ export const updateNote = async (
 };
 
 export const deleteNote = async (noteId: string) => {
+  const { code } = await chrome.storage.local.get('code');
   const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      code: CODE,
+      code,
       noteId,
     }),
   });
@@ -133,7 +137,8 @@ export const deleteImage = async (publicId: string) => {
 };
 
 export const fetchBoards = async () => {
-  const response = await fetch(`${API_BASE_URL}/extension/boards?code=${CODE}`);
+  const { code } = await chrome.storage.local.get('code');
+  const response = await fetch(`${API_BASE_URL}/extension/boards?code=${code}`);
   if (!response.ok) {
     throw new Error('Failed to fetch boards');
   }

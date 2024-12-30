@@ -104,16 +104,32 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
+  const resetState = () => {
+    setNotes([]);
+    setNotesToRender([]);
+    setCurrentUrl('');
+    setBoards([]);
+  };
+
   useEffect(() => {
     // Handle messages from background script
     const messageListener = (
-      message: { type: string; data: { text?: string; url?: string } },
+      message: { type: string; data?: { text?: string; url?: string } },
       sender: chrome.runtime.MessageSender,
       sendResponse: (response?: any) => void
     ) => {
+      if (message.type === 'LOGOUT') {
+        resetState();
+      }
+
+      if (message.type === 'LOGIN') {
+        loadNotes();
+        loadBoards();
+      }
+
       if (message.type === 'CREATE_STICKY') {
         // Create note on server first
-        createNoteOnServer(message.data.text || '')
+        createNoteOnServer(message.data?.text || '')
           .then((success) => {
             if (success) {
               // Refetch all notes after successful creation
@@ -134,7 +150,7 @@ const StickyNotesContainer: React.FC = () => {
       }
 
       if (message.type === 'UPDATE_URL') {
-        setCurrentUrl(message.data.url || '');
+        setCurrentUrl(message.data?.url || '');
       }
     };
 
