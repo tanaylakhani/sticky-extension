@@ -72,12 +72,13 @@ const Note: React.FC<NoteProps> = ({
   const [currentPosition, setCurrentPosition] = useState(note.position);
   const [showBoardMenu, setShowBoardMenu] = useState(false);
   const [localColor, setLocalColor] = useState(note.color);
-  const [isUpdatingColor, setIsUpdatingColor] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentSize, setCurrentSize] = useState(note.size || INoteSize.SMALL);
+  const [showColorMenu, setShowColorMenu] = useState(false);
+  const colorMenuRef = useRef<HTMLDivElement>(null);
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
@@ -214,11 +215,8 @@ const Note: React.FC<NoteProps> = ({
   };
 
   const handleColorChange = async (id: string, newColor: string) => {
-    if (isUpdatingColor) return; // Prevent multiple simultaneous updates
-
     // Immediately update local state
     setLocalColor(newColor);
-    setIsUpdatingColor(true);
 
     try {
       await updateNote(id, {
@@ -240,20 +238,8 @@ const Note: React.FC<NoteProps> = ({
       console.error('Error updating note color:', error);
       // Revert to previous color on error
       setLocalColor(note.color);
-    } finally {
-      setIsUpdatingColor(false);
     }
   };
-
-  const handleColorClick = useCallback(
-    debounce(() => {
-      if (isUpdatingColor) return;
-      const currentIndex = colors.indexOf(localColor);
-      const nextIndex = (currentIndex + 1) % colors.length;
-      handleColorChange(note.id, colors[nextIndex]);
-    }, 300),
-    [localColor, isUpdatingColor]
-  );
 
   // Update useEffect to sync localColor with note.color when it changes from parent
   useEffect(() => {
@@ -317,17 +303,38 @@ const Note: React.FC<NoteProps> = ({
       >
         <div className="note-header">
           <div className="note-header-left">
-            <button
-              className="color-picker-button"
-              onClick={handleColorClick}
-              style={{
-                backgroundColor: colorMap[localColor as keyof typeof colorMap],
-                opacity: isUpdatingColor ? 0.5 : 0.8,
-                cursor: isUpdatingColor ? 'not-allowed' : 'pointer',
-              }}
-              disabled={isUpdatingColor}
-              title="Change color"
-            />
+            <div className="color-menu-container" ref={colorMenuRef}>
+              <button
+                className="color-picker-button"
+                onClick={() => setShowColorMenu(!showColorMenu)}
+                style={{
+                  backgroundColor:
+                    colorMap[localColor as keyof typeof colorMap],
+                }}
+                title="Change color"
+              />
+              {showColorMenu && (
+                <div className="color-menu">
+                  {colors.map((color) => (
+                    <button
+                      key={color}
+                      className={`color-menu-item ${
+                        color === localColor ? 'active' : ''
+                      }`}
+                      style={{
+                        backgroundColor:
+                          colorMap[color as keyof typeof colorMap],
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent event from bubbling up
+                        handleColorChange(note.id, color);
+                        setShowColorMenu(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="board-menu-container" ref={menuRef}>
               <button
                 className="board-menu-button"
@@ -352,17 +359,20 @@ const Note: React.FC<NoteProps> = ({
                 </div>
               )}
             </div>
-            <button
-              className="resize-button"
+
+            <div
+              className="resize-button-container"
               onClick={handleSizeToggle}
               title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
             >
-              {currentSize === INoteSize.SMALL ? (
-                <FaExpandAlt />
-              ) : (
-                <FaCompressAlt />
-              )}
-            </button>
+              <button className="resize-button">
+                {currentSize === INoteSize.SMALL ? (
+                  <FaExpandAlt />
+                ) : (
+                  <FaCompressAlt />
+                )}
+              </button>
+            </div>
           </div>
           <button
             className="close-button"

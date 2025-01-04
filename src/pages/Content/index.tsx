@@ -32,12 +32,13 @@ const createShadowContainer = (): HTMLDivElement => {
     
     .sticky-note {
       position: absolute;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       min-height: 200px;
       padding: 0;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       border-radius: 12px;
-      display: flex;
-      flex-direction: column;
       z-index: 10000;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
@@ -50,11 +51,12 @@ const createShadowContainer = (): HTMLDivElement => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px;
+      padding: 6px 12px;
       cursor: move;
       margin: 0;
       border-radius: 12px 12px 0 0;
       background-color: rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
     }
 
     .note-header-left {
@@ -125,7 +127,7 @@ const createShadowContainer = (): HTMLDivElement => {
       border: none;
       border-radius: 50%;
       cursor: pointer;
-      padding: 0;
+      padding: 4px;
       transition: transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
@@ -133,37 +135,6 @@ const createShadowContainer = (): HTMLDivElement => {
     .color-picker-button:hover {
       transform: scale(1.1);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .color-button {
-      width: 18px;
-      height: 18px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 0;
-      transition: transform 0.2s;
-    }
-
-    .color-button:hover {
-      transform: scale(1.1);
-    }
-
-    .color-button.active {
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .color-button.GREEN { background-color: #acebbf; }
-    .color-button.BLUE { background-color: #a1d4fa; }
-    .color-button.RED { background-color: #ffa67e; }
-    .color-button.YELLOW { background-color: #ffcf7c; }
-    .color-button.PURPLE { background-color: #d8b8ff; }
-    .color-button.GRAY { background-color: #d2dce4; }
-
-    .coordinates {
-      font-size: 12px;
-      color: #666;
-      font-family: monospace;
     }
 
     .close-button {
@@ -194,6 +165,9 @@ const createShadowContainer = (): HTMLDivElement => {
       padding: 8px 12px;
       border-top: 1px solid rgba(0, 0, 0, 0.05);
       margin-top: auto;
+      flex-shrink: 0;
+      background-color: inherit;
+      border-radius: 0 0 12px 12px;
     }
 
     .toolbar-button {
@@ -221,11 +195,11 @@ const createShadowContainer = (): HTMLDivElement => {
     }
 
     .ProseMirror {
-      outline: none;
-      min-height: 100px;
-      max-height: 400px;
+      flex-grow: 1;
       overflow-y: auto;
+      min-height: 0;
       padding: 12px;
+      margin-bottom: 0;
       color: inherit;
     }
 
@@ -297,16 +271,20 @@ const createShadowContainer = (): HTMLDivElement => {
     }
 
     /* Add size classes */
-    .resize-button {
-      background: none;
-      border: none;
-      opacity: 0.6;
+    .resize-button-container {
       cursor: pointer;
       padding: 4px;
       border-radius: 4px;
     }
 
-    .resize-button:hover {
+    .resize-button {
+      background: none;
+      border: none;
+      opacity: 0.6;
+      cursor: pointer;
+    }
+
+    .resize-button-container:hover {
       background-color: rgba(0, 0, 0, 0.05);
     }
 
@@ -325,6 +303,49 @@ const createShadowContainer = (): HTMLDivElement => {
         height: 24rem;  /* 96 * 0.25rem */
         width: 24rem;
       }
+    }
+
+    .color-menu-container {
+      position: relative;
+    }
+
+    .color-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 8px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      z-index: 1000;
+    }
+
+    .color-menu-item {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .color-menu-item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .color-menu-item.active {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .editor-container {
+      max-height: 100%;
+      overflow-y: auto;
     }
   `;
   shadowRoot.appendChild(style);

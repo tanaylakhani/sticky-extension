@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { EditorContent, Editor } from '@tiptap/react';
-import { FaTimesCircle } from 'react-icons/fa';
+import { FaTimesCircle, FaSpinner } from 'react-icons/fa'; // Import FaSpinner for loading icon
 import { deleteImage } from '../../../services/api';
 import { extractPublicIdFromUrl } from '../utils/imageUtils';
 
@@ -118,7 +118,7 @@ const Tiptap: React.FC<TiptapProps> = ({
             animation: isUploading ? 'spin 1s linear infinite' : 'none',
           }}
         >
-          {isUploading ? '⟳' : <FaTimesCircle size={16} />}
+          {isUploading ? <FaSpinner size={16} /> : <FaTimesCircle size={16} />}
         </button>
       )}
       <EditorContent
