@@ -1,0 +1,7 @@
+.draggable-sticky-icon {
+  transform: scale(1);
+}
+
+.draggable-sticky-icon:hover {
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}

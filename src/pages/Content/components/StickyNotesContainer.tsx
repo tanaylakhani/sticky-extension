@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Note from './Note';
+import DraggableIcon from './DraggableIcon';
 import { v4 as uuidv4 } from 'uuid';
 import { fetchNotes, createNote, fetchBoards } from '../../../services/api';
 import { StickyNote, TipTapContent } from '../../../types';
@@ -53,13 +54,12 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
-  const createNoteOnServer = async (text: string) => {
+  const createNoteOnServer = async (
+    text: string,
+    position: { x: number; y: number }
+  ) => {
     try {
       const noteId = uuidv4();
-      const position = {
-        x: lastClickCoords.x - 10,
-        y: lastClickCoords.y - 10,
-      };
 
       // Create TipTap JSON content
       const content: TipTapContent = {
@@ -115,7 +115,14 @@ const StickyNotesContainer: React.FC = () => {
   useEffect(() => {
     // Handle messages from background script
     const messageListener = (
-      message: { type: string; data?: { text?: string; url?: string } },
+      message: {
+        type: string;
+        data?: {
+          text?: string;
+          url?: string;
+          position?: { x: number; y: number };
+        };
+      },
       sender: chrome.runtime.MessageSender,
       sendResponse: (response?: any) => void
     ) => {
@@ -129,8 +136,13 @@ const StickyNotesContainer: React.FC = () => {
       }
 
       if (message.type === 'CREATE_STICKY') {
+        const position = message.data?.position || {
+          x: lastClickCoords.x - 10,
+          y: lastClickCoords.y - 10,
+        };
+
         // Create note on server first
-        createNoteOnServer(message.data?.text || '')
+        createNoteOnServer(message.data?.text || '', position)
           .then((success) => {
             if (success) {
               // Refetch all notes after successful creation
@@ -181,6 +193,15 @@ const StickyNotesContainer: React.FC = () => {
 
   return (
     <>
+      <DraggableIcon
+        createNote={async (text, position) => {
+          const success = await createNoteOnServer(text, position);
+          if (success) {
+            await loadNotes();
+          }
+          return success;
+        }}
+      />
       {notesToRender.map((note) => (
         <Note
           key={note.id}

@@ -203,6 +203,10 @@ const createShadowContainer = (): HTMLDivElement => {
       color: inherit;
     }
 
+    .ProseMirror:focus-visible {
+      outline: none;
+    }
+
     .ProseMirror img {
       max-width: 180px;
       height: auto;
