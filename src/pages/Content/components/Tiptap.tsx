@@ -12,6 +12,7 @@ interface TiptapProps {
   };
   color: string;
   id: string;
+  isUploading?: boolean;
 }
 
 const Tiptap: React.FC<TiptapProps> = ({
@@ -20,6 +21,7 @@ const Tiptap: React.FC<TiptapProps> = ({
   data,
   color,
   id,
+  isUploading = false,
 }) => {
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(
     null
@@ -100,22 +102,23 @@ const Tiptap: React.FC<TiptapProps> = ({
       onKeyUp={(e) => e.stopPropagation()}
       onKeyPress={(e) => e.stopPropagation()}
     >
-      {selectedImage && (
+      {(selectedImage || isUploading) && (
         <button
-          onClick={removeImage}
+          onClick={isUploading ? undefined : removeImage}
           style={{
             position: 'absolute',
             top: '10px',
             right: '32px',
             padding: '4px',
             borderRadius: '4px',
-            cursor: 'pointer',
+            cursor: isUploading ? 'default' : 'pointer',
             color: color,
             background: 'none',
             border: 'none',
+            animation: isUploading ? 'spin 1s linear infinite' : 'none',
           }}
         >
-          <FaTimesCircle size={16} />
+          {isUploading ? '⟳' : <FaTimesCircle size={16} />}
         </button>
       )}
       <EditorContent

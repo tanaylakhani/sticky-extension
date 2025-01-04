@@ -67,8 +67,12 @@ const Note: React.FC<NoteProps> = ({
   const [isTextAreaInFocus, setIsTextAreaInFocus] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(note.position);
   const [showBoardMenu, setShowBoardMenu] = useState(false);
+  const [localColor, setLocalColor] = useState(note.color);
+  const [isUpdatingColor, setIsUpdatingColor] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
@@ -184,11 +188,14 @@ const Note: React.FC<NoteProps> = ({
   };
 
   const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
     try {
       const data = await uploadImage(file);
       editor?.chain().focus().setImage({ src: data.url }).run();
     } catch (error) {
       console.error('Error uploading image:', error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -202,6 +209,12 @@ const Note: React.FC<NoteProps> = ({
   };
 
   const handleColorChange = async (id: string, newColor: string) => {
+    if (isUpdatingColor) return; // Prevent multiple simultaneous updates
+
+    // Immediately update local state
+    setLocalColor(newColor);
+    setIsUpdatingColor(true);
+
     try {
       await updateNote(id, {
         websiteUrl: window.location.href,
@@ -220,14 +233,27 @@ const Note: React.FC<NoteProps> = ({
       await loadNotes();
     } catch (error) {
       console.error('Error updating note color:', error);
+      // Revert to previous color on error
+      setLocalColor(note.color);
+    } finally {
+      setIsUpdatingColor(false);
     }
   };
 
-  const handleColorClick = () => {
-    const currentIndex = colors.indexOf(note.color);
-    const nextIndex = (currentIndex + 1) % colors.length;
-    handleColorChange(note.id, colors[nextIndex]);
-  };
+  const handleColorClick = useCallback(
+    debounce(() => {
+      if (isUpdatingColor) return;
+      const currentIndex = colors.indexOf(localColor);
+      const nextIndex = (currentIndex + 1) % colors.length;
+      handleColorChange(note.id, colors[nextIndex]);
+    }, 300),
+    [localColor, isUpdatingColor]
+  );
+
+  // Update useEffect to sync localColor with note.color when it changes from parent
+  useEffect(() => {
+    setLocalColor(note.color);
+  }, [note.color]);
 
   return (
     <Draggable
@@ -235,12 +261,23 @@ const Note: React.FC<NoteProps> = ({
       defaultPosition={note.position}
       onDrag={handleDrag}
       bounds="body"
+      onStart={() => setIsDragging(true)}
+      onStop={() => setIsDragging(false)}
     >
       <div
         ref={noteRef}
-        className={`sticky-note ${note.color} ${
+        className={`sticky-note ${localColor} ${
           isTextAreaInFocus ? 'focused' : ''
         }`}
+        style={{
+          // transform: isDragging ? 'rotate(-10deg) scale(0.9)' : 'none',
+          // transition: 'transform 0.1s ease-out',
+          rotate: isDragging ? '-3deg' : '0deg',
+          translate: isDragging ? '0px 50px' : '0px 0px',
+          scale: isDragging ? '0.95' : '1',
+          transition:
+            'rotate 0.1s ease-out, translate 0.1s ease-out, scale 0.1s ease-out',
+        }}
       >
         <div className="note-header">
           <div className="note-header-left">
@@ -248,8 +285,11 @@ const Note: React.FC<NoteProps> = ({
               className="color-picker-button"
               onClick={handleColorClick}
               style={{
-                backgroundColor: colorMap[note.color as keyof typeof colorMap],
+                backgroundColor: colorMap[localColor as keyof typeof colorMap],
+                opacity: isUpdatingColor ? 0.5 : 0.8,
+                cursor: isUpdatingColor ? 'not-allowed' : 'pointer',
               }}
+              disabled={isUpdatingColor}
               title="Change color"
             />
             <div className="board-menu-container" ref={menuRef}>
@@ -293,6 +333,7 @@ const Note: React.FC<NoteProps> = ({
               data={{ content: initialContent }}
               color="inherit"
               id={note.id}
+              isUploading={isUploading}
             />
             <div className="editor-toolbar">
               <button

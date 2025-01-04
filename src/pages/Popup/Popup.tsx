@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './Popup.css';
 import { fetchBoards } from '../../services/api';
 import { Board } from '../../types';
+
 const Popup = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [lastSelectedBoardId, setLastSelectedBoardId] = useState<string | null>(
@@ -9,8 +10,10 @@ const Popup = () => {
   );
   const [code, setCode] = useState<string>('');
   const [isValidCode, setIsValidCode] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const loadBoards = async (userCode: string) => {
+    setIsLoading(true);
     try {
       const boards = await fetchBoards();
       setBoards(boards);
@@ -19,6 +22,8 @@ const Popup = () => {
     } catch (error) {
       setIsValidCode(false);
       setBoards([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,7 +80,9 @@ const Popup = () => {
               onChange={(e) => setCode(e.target.value)}
               placeholder="Enter your code"
             />
-            <button type="submit">Submit</button>
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Loading...' : 'Submit'}
+            </button>
           </form>
           <p>
             Login to{' '}
@@ -87,19 +94,25 @@ const Popup = () => {
         </div>
       ) : (
         <div className="board-list">
-          {boards.map((board) => (
-            <div
-              key={board._id}
-              className={
-                board._id === lastSelectedBoardId ? 'last-selected' : ''
-              }
-            >
-              {board.boardName}
-            </div>
-          ))}
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
+          {isLoading ? (
+            <div className="loading">Loading boards...</div>
+          ) : (
+            <>
+              {boards.map((board) => (
+                <div
+                  key={board._id}
+                  className={
+                    board._id === lastSelectedBoardId ? 'last-selected' : ''
+                  }
+                >
+                  {board.boardName}
+                </div>
+              ))}
+              <button onClick={handleLogout} className="logout-button">
+                Logout
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
