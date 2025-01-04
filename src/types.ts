@@ -1,3 +1,5 @@
+import { INoteSize } from './enums';
+
 export interface StickyNote {
   id: string;
   websiteUrl: string;
@@ -8,6 +10,7 @@ export interface StickyNote {
   };
   text: string | TipTapContent;
   color: string;
+  size?: INoteSize;
 }
 
 export interface TipTapContent {

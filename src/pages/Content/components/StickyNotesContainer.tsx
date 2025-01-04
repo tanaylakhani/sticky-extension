@@ -40,6 +40,7 @@ const StickyNotesContainer: React.FC = () => {
         color: note.data.data.color,
         websiteUrl: note.websiteUrl,
         boardId: note.boardId,
+        size: note.data.data.size,
       }));
       setNotes(notes);
 

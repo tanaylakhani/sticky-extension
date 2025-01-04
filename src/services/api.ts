@@ -1,3 +1,5 @@
+import { INoteSize } from '../enums';
+
 // const API_BASE_URL = 'http://localhost:3008/api';
 const API_BASE_URL = 'https://sticky-staging-web.vercel.app/api';
 
@@ -12,6 +14,7 @@ interface NoteData {
     content: any;
     color: string;
     title: string;
+    size?: INoteSize;
   };
 }
 

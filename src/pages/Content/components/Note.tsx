@@ -18,11 +18,14 @@ import {
   FaImage,
   FaTrash,
   FaEllipsisV,
+  FaExpandAlt,
+  FaCompressAlt,
 } from 'react-icons/fa';
 import Tiptap from './Tiptap';
 import { uploadImage, updateNote, deleteNote } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
+import { INoteSize } from '../../../enums';
 
 interface Board {
   id: string;
@@ -56,6 +59,7 @@ interface NoteProps {
   loadNotes: () => Promise<void>;
   note: StickyNote;
   boards: Board[];
+  size?: INoteSize;
 }
 
 const Note: React.FC<NoteProps> = ({
@@ -73,6 +77,7 @@ const Note: React.FC<NoteProps> = ({
   const noteRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentSize, setCurrentSize] = useState(note.size || INoteSize.SMALL);
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
@@ -255,28 +260,59 @@ const Note: React.FC<NoteProps> = ({
     setLocalColor(note.color);
   }, [note.color]);
 
+  const handleSizeToggle = async () => {
+    const newSize =
+      currentSize === INoteSize.SMALL ? INoteSize.LARGE : INoteSize.SMALL;
+    setCurrentSize(newSize);
+
+    try {
+      await updateNote(note.id, {
+        websiteUrl: window.location.href,
+        data: {
+          type: 'note',
+          position: currentPosition,
+          positionAbsolute: currentPosition,
+          position_on_webpage: currentPosition,
+          data: {
+            content: editor?.getJSON(),
+            color: note.color,
+            title: '',
+            size: newSize,
+          },
+        },
+      });
+      await loadNotes();
+    } catch (error) {
+      console.error('Error updating note size:', error);
+      setCurrentSize(currentSize); // Revert on error
+    }
+  };
+
   return (
     <Draggable
       handle=".note-header"
       defaultPosition={note.position}
-      onDrag={handleDrag}
+      onDrag={(e, data) => {
+        setIsDragging(true);
+        handleDrag(e, data);
+      }}
       bounds="body"
-      onStart={() => setIsDragging(true)}
+      onStart={() => {
+        // Remove the isDragging set from here
+      }}
       onStop={() => setIsDragging(false)}
     >
       <div
         ref={noteRef}
         className={`sticky-note ${localColor} ${
           isTextAreaInFocus ? 'focused' : ''
-        }`}
+        } ${currentSize}`}
         style={{
-          // transform: isDragging ? 'rotate(-10deg) scale(0.9)' : 'none',
-          // transition: 'transform 0.1s ease-out',
           rotate: isDragging ? '-3deg' : '0deg',
           translate: isDragging ? '0px 50px' : '0px 0px',
           scale: isDragging ? '0.95' : '1',
           transition:
-            'rotate 0.1s ease-out, translate 0.1s ease-out, scale 0.1s ease-out',
+            'rotate 0.1s ease-out, translate 0.1s ease-out, scale 0.1s ease-out, background-color 0.1s ease-out, width 0.2s ease-out, height 0.2s ease-out',
         }}
       >
         <div className="note-header">
@@ -316,6 +352,17 @@ const Note: React.FC<NoteProps> = ({
                 </div>
               )}
             </div>
+            <button
+              className="resize-button"
+              onClick={handleSizeToggle}
+              title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
+            >
+              {currentSize === INoteSize.SMALL ? (
+                <FaExpandAlt />
+              ) : (
+                <FaCompressAlt />
+              )}
+            </button>
           </div>
           <button
             className="close-button"

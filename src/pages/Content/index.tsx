@@ -32,7 +32,6 @@ const createShadowContainer = (): HTMLDivElement => {
     
     .sticky-note {
       position: absolute;
-      width: 200px;
       min-height: 200px;
       padding: 0;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -295,6 +294,37 @@ const createShadowContainer = (): HTMLDivElement => {
     .sticky-note.GRAY {
       background-color: #d2dce4;
       color: #3e4e5e;
+    }
+
+    /* Add size classes */
+    .resize-button {
+      background: none;
+      border: none;
+      opacity: 0.6;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .resize-button:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .sticky-note.small {
+      height: 15rem;  /* 60 * 0.25rem */
+      width: 15rem;
+    }
+
+    .sticky-note.large {
+      height: 20rem;  /* 80 * 0.25rem */
+      width: 20rem;
+    }
+
+    @media (min-width: 768px) {
+      .sticky-note.large {
+        height: 24rem;  /* 96 * 0.25rem */
+        width: 24rem;
+      }
     }
   `;
   shadowRoot.appendChild(style);
