@@ -32,6 +32,8 @@ interface UpdateNoteRequest {
 
 export const fetchNotes = async () => {
   const { code } = await chrome.storage.local.get('code');
+  if (!code) return;
+
   const response = await fetch(`${API_BASE_URL}/extension/notes?code=${code}`);
   if (!response.ok) {
     throw new Error('Failed to fetch notes');
@@ -41,6 +43,8 @@ export const fetchNotes = async () => {
 
 export const createNote = async (noteData: CreateNoteRequest) => {
   const { code } = await chrome.storage.local.get('code');
+  if (!code) return;
+
   const response = await fetch(`${API_BASE_URL}/extension/notes`, {
     method: 'POST',
     headers: {
@@ -141,6 +145,8 @@ export const deleteImage = async (publicId: string) => {
 
 export const fetchBoards = async () => {
   const { code } = await chrome.storage.local.get('code');
+  if (!code) return;
+
   const response = await fetch(`${API_BASE_URL}/extension/boards?code=${code}`);
   if (!response.ok) {
     throw new Error('Failed to fetch boards');

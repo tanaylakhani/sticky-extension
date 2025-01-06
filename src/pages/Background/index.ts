@@ -30,10 +30,50 @@ chrome.contextMenus.onClicked.addListener(
 );
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  if (changeInfo.url) {
-    chrome.tabs.sendMessage(tabId, {
-      type: 'UPDATE_URL',
-      data: { url: changeInfo.url },
-    });
+  if (!changeInfo.url) return;
+
+  console.log('tab updated', tabId, changeInfo, tab);
+
+  if (changeInfo?.url?.includes('/extension/code')) {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabId },
+        func: () => {
+          return new Promise((resolve) => {
+            let attempts = 0;
+            const maxAttempts = 10;
+            const checkInterval = 1000; // 1 second
+
+            const checkForElement = () => {
+              const element = document.querySelector(
+                '#sticky-chrome-extension-code'
+              );
+              if (element) {
+                resolve(element.textContent || '');
+              } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(checkForElement, checkInterval);
+              } else {
+                resolve(''); // Give up after max attempts
+              }
+            };
+
+            checkForElement();
+          });
+        },
+      },
+      (results) => {
+        const code = results?.[0]?.result || '';
+        chrome.tabs.sendMessage(tabId, {
+          type: 'CODE_DETECTED',
+          data: { code },
+        });
+      }
+    );
   }
+
+  chrome.tabs.sendMessage(tabId, {
+    type: 'UPDATE_URL',
+    data: { url: changeInfo.url },
+  });
 });

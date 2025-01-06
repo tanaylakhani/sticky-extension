@@ -8,8 +8,12 @@
     "default_popup": "popup.html",
     "default_icon": "icon-34.png"
   },
-  "permissions": ["contextMenus", "tabs", "storage"],
-  "host_permissions": ["http://localhost:3000/*", "http://localhost:3008/*"],
+  "permissions": ["contextMenus", "tabs", "storage", "scripting"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "http://localhost:3008/*",
+    "<all_urls>"
+  ],
   "icons": {
     "128": "icon-128.png"
   },

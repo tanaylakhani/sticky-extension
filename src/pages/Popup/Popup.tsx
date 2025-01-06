@@ -98,7 +98,7 @@ const Popup = () => {
             <div className="loading">Loading boards...</div>
           ) : (
             <>
-              {boards.map((board) => (
+              {boards?.map((board) => (
                 <div
                   key={board._id}
                   className={

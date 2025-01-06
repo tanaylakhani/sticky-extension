@@ -20,7 +20,7 @@ const StickyNotesContainer: React.FC = () => {
   const loadBoards = async () => {
     try {
       const data = await fetchBoards();
-      const formattedBoards = data.map((board: any) => ({
+      const formattedBoards = data?.map((board: any) => ({
         id: board._id,
         name: board.boardName,
       }));
@@ -33,8 +33,9 @@ const StickyNotesContainer: React.FC = () => {
   const loadNotes = async () => {
     try {
       const data = await fetchNotes();
+      if (!data) return;
 
-      const notes = data.map((note: any) => ({
+      const notes = data?.map((note: any) => ({
         id: note.data.id,
         position: note.data.position_on_webpage,
         text: note.data.data.content,
@@ -121,6 +122,7 @@ const StickyNotesContainer: React.FC = () => {
           text?: string;
           url?: string;
           position?: { x: number; y: number };
+          code?: string;
         };
       },
       sender: chrome.runtime.MessageSender,
@@ -163,10 +165,18 @@ const StickyNotesContainer: React.FC = () => {
       }
 
       if (message.type === 'UPDATE_URL') {
+        console.log('UPDATE_URL', message.data?.url);
         setCurrentUrl(message.data?.url || '');
+      }
+
+      if (message.type === 'CODE_DETECTED') {
+        if (message.data?.code) {
+          chrome.storage.local.set({ code: message.data?.code });
+        }
       }
     };
 
+    console.log('listener added');
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [lastClickCoords]);
@@ -188,6 +198,11 @@ const StickyNotesContainer: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!currentUrl) return;
+
+    console.log({ currentUrl });
+    // if(currentUrl.includes('/extension/code'))
+
     setNotesToRender(notes.filter((note) => note.websiteUrl === currentUrl));
   }, [currentUrl]);
 
@@ -202,7 +217,7 @@ const StickyNotesContainer: React.FC = () => {
           return success;
         }}
       />
-      {notesToRender.map((note) => (
+      {notesToRender?.map((note) => (
         <Note
           key={note.id}
           id={note.id}
