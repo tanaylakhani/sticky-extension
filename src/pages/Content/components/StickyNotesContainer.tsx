@@ -138,10 +138,17 @@ const StickyNotesContainer: React.FC = () => {
       }
 
       if (message.type === 'CREATE_STICKY') {
-        const position = message.data?.position || {
+        let position = message.data?.position || {
           x: lastClickCoords.x - 10,
           y: lastClickCoords.y - 10,
         };
+
+        if (typeof position === 'string' && position === 'middle') {
+          position = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2 + window.scrollY,
+          };
+        }
 
         // Create note on server first
         createNoteOnServer(message.data?.text || '', position)

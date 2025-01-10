@@ -1,7 +1,5 @@
+import { API_BASE_URL } from '../constants';
 import { INoteSize } from '../enums';
-
-// const API_BASE_URL = 'http://localhost:3008/api';
-const API_BASE_URL = 'https://sticky-staging-web.vercel.app/api';
 
 interface NoteData {
   id: string;
@@ -28,6 +26,12 @@ interface UpdateNoteRequest {
   websiteUrl: string;
   boardId?: string;
   data: Partial<NoteData>;
+}
+
+interface UserProfile {
+  name: string;
+  email: string;
+  picture: string;
 }
 
 export const fetchNotes = async () => {
@@ -150,6 +154,19 @@ export const fetchBoards = async () => {
   const response = await fetch(`${API_BASE_URL}/extension/boards?code=${code}`);
   if (!response.ok) {
     throw new Error('Failed to fetch boards');
+  }
+  return response.json();
+};
+
+export const fetchUserProfile = async (): Promise<UserProfile> => {
+  const { code } = await chrome.storage.local.get('code');
+  if (!code) throw new Error('No code found');
+
+  const response = await fetch(
+    `${API_BASE_URL}/extension/profile?code=${code}`
+  );
+  if (!response.ok) {
+    throw new Error('Failed to fetch user profile');
   }
   return response.json();
 };

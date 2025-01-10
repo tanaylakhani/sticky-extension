@@ -2,6 +2,7 @@ type CreateStickyMessage = {
   type: 'CREATE_STICKY';
   data: {
     text: string;
+    position?: 'middle';
   };
 };
 
@@ -21,6 +22,7 @@ chrome.contextMenus.onClicked.addListener(
         type: 'CREATE_STICKY',
         data: {
           text: info.selectionText || '',
+          position: 'middle',
         },
       };
 
@@ -31,8 +33,6 @@ chrome.contextMenus.onClicked.addListener(
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (!changeInfo.url) return;
-
-  console.log('tab updated', tabId, changeInfo, tab);
 
   if (changeInfo?.url?.includes('/extension/code')) {
     chrome.scripting.executeScript(
@@ -64,10 +64,17 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
       },
       (results) => {
         const code = results?.[0]?.result || '';
-        chrome.tabs.sendMessage(tabId, {
-          type: 'CODE_DETECTED',
-          data: { code },
-        });
+        chrome.tabs.sendMessage(
+          tabId,
+          {
+            type: 'CODE_DETECTED',
+            data: { code },
+          },
+          () => {
+            // Close the tab after message is sent
+            chrome.tabs.remove(tabId);
+          }
+        );
       }
     );
   }
