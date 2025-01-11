@@ -1,4 +1,4 @@
-const IS_PRODUCTION = false;
+const IS_PRODUCTION = true;
 
 export const BASE_URL = IS_PRODUCTION
   ? 'https://sticky-staging-web.vercel.app'

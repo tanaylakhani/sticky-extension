@@ -140,7 +140,7 @@ const Popup = () => {
           </form>
           <p className="login-text">
             Login to{' '}
-            <a href="http://localhost:3008/extension/code" target="_blank">
+            <a href={`${BASE_URL}/extension/code`} target="_blank">
               sticky web app
             </a>{' '}
             to get the code.
