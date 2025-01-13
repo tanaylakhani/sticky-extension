@@ -13,15 +13,15 @@ interface DraggableIconProps {
 const STORAGE_KEY = 'draggableIconPosition';
 
 const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
-  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const isDragging = useRef(false);
 
   useEffect(() => {
     // Load position from chrome storage
     chrome.storage.local.get(STORAGE_KEY).then((result) => {
-      if (result[STORAGE_KEY]) {
-        setPosition(result[STORAGE_KEY]);
-      }
+      setPosition(result[STORAGE_KEY] || { x: 20, y: 20 });
     });
 
     // Listen for changes in other tabs
@@ -67,7 +67,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
     }, 100);
   };
 
-  return (
+  return position ? (
     <Draggable
       position={position}
       onDrag={handleDrag}
@@ -85,7 +85,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
         </span>
       </div>
     </Draggable>
-  );
+  ) : null;
 };
 
 export default DraggableIcon;
