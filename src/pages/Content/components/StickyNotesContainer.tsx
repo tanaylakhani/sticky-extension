@@ -183,7 +183,7 @@ const StickyNotesContainer: React.FC = () => {
       }
     };
 
-    console.log('listener added');
+    console.log({ lastClickCoords });
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [lastClickCoords]);

@@ -22,7 +22,6 @@ chrome.contextMenus.onClicked.addListener(
         type: 'CREATE_STICKY',
         data: {
           text: info.selectionText || '',
-          position: 'middle',
         },
       };
 

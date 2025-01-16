@@ -293,13 +293,15 @@ const Note: React.FC<NoteProps> = ({
         className={`sticky-note ${localColor} ${
           isTextAreaInFocus ? 'focused' : ''
         } ${currentSize}`}
-        style={{
-          rotate: isDragging ? '-3deg' : '0deg',
-          translate: isDragging ? '0px 50px' : '0px 0px',
-          scale: isDragging ? '0.95' : '1',
-          transition:
-            'rotate 0.1s ease-out, translate 0.1s ease-out, scale 0.1s ease-out, background-color 0.1s ease-out, width 0.2s ease-out, height 0.2s ease-out',
-        }}
+        style={
+          {
+            // rotate: isDragging ? '-3deg' : '0deg',
+            // translate: isDragging ? '0px 50px' : '0px 0px',
+            // scale: isDragging ? '0.95' : '1',
+            // transition:
+            //   'rotate 0.1s ease-out, translate 0.1s ease-out, scale 0.1s ease-out, background-color 0.1s ease-out, width 0.2s ease-out, height 0.2s ease-out',
+          }
+        }
       >
         <div className="note-header">
           <div className="note-header-left">

@@ -80,7 +80,15 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
         onClick={handleClick}
       >
         <BsSticky size={20} color="#4CAF50" />
-        <span style={{ fontSize: '14px', fontWeight: 500, color: 'black' }}>
+        <span
+          style={{
+            fontSize: '14px !important',
+            fontWeight: 500,
+            color: 'black !important',
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
+          }}
+        >
           New Sticky
         </span>
       </div>
