@@ -82,11 +82,11 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
         <BsSticky size={20} color="#4CAF50" />
         <span
           style={{
-            fontSize: '14px !important',
-            fontWeight: 500,
-            color: 'black !important',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'black',
             fontFamily:
-              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         >
           New Sticky
