@@ -26,6 +26,7 @@ import { uploadImage, updateNote, deleteNote } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
 import { INoteSize } from '../../../enums';
+import { playBubbleSound, playOinkSound } from '../utils/soundUtils';
 // import bubbleSound from '../../../assets/sounds/bubble.wav';
 
 interface Board {
@@ -247,12 +248,6 @@ const Note: React.FC<NoteProps> = ({
     setLocalColor(note.color);
   }, [note.color]);
 
-  const playBubbleSound = () => {
-    const audio1 = new Audio('assets/sounds/bubble.wav');
-    audio1.volume = 1;
-    audio1.play();
-  };
-
   const handleSizeToggle = async () => {
     // play audio
     playBubbleSound();
@@ -317,7 +312,11 @@ const Note: React.FC<NoteProps> = ({
             <div className="color-menu-container" ref={colorMenuRef}>
               <button
                 className="color-picker-button"
-                onClick={() => setShowColorMenu(!showColorMenu)}
+                onClick={() => {
+                  playBubbleSound();
+                  setShowColorMenu(!showColorMenu);
+                }}
+                onMouseEnter={playOinkSound}
                 style={{
                   backgroundColor:
                     colorMap[localColor as keyof typeof colorMap],
@@ -349,7 +348,11 @@ const Note: React.FC<NoteProps> = ({
             <div className="board-menu-container" ref={menuRef}>
               <button
                 className="board-menu-button"
-                onClick={() => setShowBoardMenu(!showBoardMenu)}
+                onClick={() => {
+                  playBubbleSound();
+                  setShowBoardMenu(!showBoardMenu);
+                }}
+                onMouseEnter={playOinkSound}
                 title="Select board"
               >
                 <FaEllipsisV />
@@ -373,10 +376,10 @@ const Note: React.FC<NoteProps> = ({
 
             <div
               className="resize-button-container"
-              onClick={handleSizeToggle}
+              onMouseEnter={playOinkSound}
               title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
             >
-              <button className="resize-button">
+              <button className="resize-button" onClick={handleSizeToggle}>
                 {currentSize === INoteSize.SMALL ? (
                   <FaExpandAlt />
                 ) : (
@@ -387,7 +390,11 @@ const Note: React.FC<NoteProps> = ({
           </div>
           <button
             className="close-button"
-            onClick={() => handleDeleteNote(note.id)}
+            onClick={() => {
+              playBubbleSound();
+              handleDeleteNote(note.id);
+            }}
+            onMouseEnter={playOinkSound}
           >
             <FaTrash />
           </button>
@@ -405,7 +412,11 @@ const Note: React.FC<NoteProps> = ({
             />
             <div className="editor-toolbar">
               <button
-                onClick={() => editor.chain().focus().toggleBold().run()}
+                onClick={() => {
+                  playBubbleSound();
+                  editor.chain().focus().toggleBold().run();
+                }}
+                onMouseEnter={playOinkSound}
                 className={`toolbar-button ${
                   editor.isActive('bold') ? 'active' : ''
                 }`}
@@ -413,7 +424,11 @@ const Note: React.FC<NoteProps> = ({
                 <FaBold />
               </button>
               <button
-                onClick={() => editor.chain().focus().toggleItalic().run()}
+                onClick={() => {
+                  playBubbleSound();
+                  editor.chain().focus().toggleItalic().run();
+                }}
+                onMouseEnter={playOinkSound}
                 className={`toolbar-button ${
                   editor.isActive('italic') ? 'active' : ''
                 }`}
@@ -421,7 +436,11 @@ const Note: React.FC<NoteProps> = ({
                 <FaItalic />
               </button>
               <button
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                onClick={() => {
+                  playBubbleSound();
+                  editor.chain().focus().toggleUnderline().run();
+                }}
+                onMouseEnter={playOinkSound}
                 className={`toolbar-button ${
                   editor.isActive('underline') ? 'active' : ''
                 }`}
@@ -429,7 +448,11 @@ const Note: React.FC<NoteProps> = ({
                 <FaUnderline />
               </button>
               <button
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                onClick={() => {
+                  playBubbleSound();
+                  editor.chain().focus().toggleBulletList().run();
+                }}
+                onMouseEnter={playOinkSound}
                 className={`toolbar-button ${
                   editor.isActive('bulletList') ? 'active' : ''
                 }`}
@@ -438,6 +461,7 @@ const Note: React.FC<NoteProps> = ({
               </button>
               <button
                 onClick={() => {
+                  playBubbleSound();
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = 'image/*';
@@ -449,6 +473,7 @@ const Note: React.FC<NoteProps> = ({
                   };
                   input.click();
                 }}
+                onMouseEnter={playOinkSound}
                 className="toolbar-button"
               >
                 <FaImage />

@@ -106,7 +106,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     await setupOffscreenDocument();
     chrome.runtime.sendMessage({
       action: 'play_audio',
-      sound: '/assets/sounds/bubble.wav',
+      sound: message.sound,
     });
   }
 });

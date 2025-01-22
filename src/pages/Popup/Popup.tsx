@@ -112,13 +112,6 @@ const Popup = () => {
 
   return (
     <div className="App">
-      <button
-        onClick={() => {
-          chrome.runtime.sendMessage({ action: 'play_sound' });
-        }}
-      >
-        Play sound
-      </button>
       <header className="header">
         <div className="logo-section">
           <Logo />
