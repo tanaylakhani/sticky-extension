@@ -81,6 +81,7 @@ const Note: React.FC<NoteProps> = ({
   const [currentSize, setCurrentSize] = useState(note.size || INoteSize.SMALL);
   const [showColorMenu, setShowColorMenu] = useState(false);
   const colorMenuRef = useRef<HTMLDivElement>(null);
+  const [isClicking, setIsClicking] = useState(false);
 
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
@@ -249,8 +250,6 @@ const Note: React.FC<NoteProps> = ({
   }, [note.color]);
 
   const handleSizeToggle = async () => {
-    // play audio
-    playBubbleSound();
     const newSize =
       currentSize === INoteSize.SMALL ? INoteSize.LARGE : INoteSize.SMALL;
     setCurrentSize(newSize);
@@ -336,6 +335,7 @@ const Note: React.FC<NoteProps> = ({
                           colorMap[color as keyof typeof colorMap],
                       }}
                       onClick={(e) => {
+                        playBubbleSound();
                         e.stopPropagation(); // Prevent event from bubbling up
                         handleColorChange(note.id, color);
                         setShowColorMenu(false);
@@ -365,7 +365,10 @@ const Note: React.FC<NoteProps> = ({
                       className={`board-menu-item ${
                         note.boardId === board.id ? 'active' : ''
                       }`}
-                      onClick={() => handleBoardSelect(board.id)}
+                      onClick={() => {
+                        playBubbleSound();
+                        handleBoardSelect(board.id);
+                      }}
                     >
                       {board.name}
                     </button>
@@ -376,10 +379,23 @@ const Note: React.FC<NoteProps> = ({
 
             <div
               className="resize-button-container"
-              onMouseEnter={playOinkSound}
               title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
             >
-              <button className="resize-button" onClick={handleSizeToggle}>
+              <button
+                className="resize-button"
+                onClick={() => {
+                  setIsClicking(true);
+                  playBubbleSound();
+                  handleSizeToggle();
+                  // Reset after a short delay
+                  setTimeout(() => setIsClicking(false), 100);
+                }}
+                onMouseEnter={() => {
+                  if (!isClicking) {
+                    playOinkSound();
+                  }
+                }}
+              >
                 {currentSize === INoteSize.SMALL ? (
                   <FaExpandAlt />
                 ) : (
