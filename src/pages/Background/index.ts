@@ -83,3 +83,30 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     data: { url: changeInfo.url },
   });
 });
+
+const OFFSCREEN_DOCUMENT_PATH = 'offscreen.html';
+
+// Create the offscreen document if it doesn't exist
+async function setupOffscreenDocument() {
+  const existingContexts = await (chrome as any).runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+  });
+
+  if (existingContexts.length > 0) return;
+
+  await (chrome as any).offscreen.createDocument({
+    url: OFFSCREEN_DOCUMENT_PATH,
+    reasons: ['AUDIO_PLAYBACK'],
+    justification: 'Playing audio on button click',
+  });
+}
+
+chrome.runtime.onMessage.addListener(async (message) => {
+  if (message.action === 'play_sound') {
+    await setupOffscreenDocument();
+    chrome.runtime.sendMessage({
+      action: 'play_audio',
+      sound: '/assets/sounds/bubble.wav',
+    });
+  }
+});

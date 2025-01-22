@@ -8,7 +8,7 @@
     "default_popup": "popup.html",
     "default_icon": "icon-34.png"
   },
-  "permissions": ["contextMenus", "tabs", "storage", "scripting"],
+  "permissions": ["contextMenus", "tabs", "storage", "scripting", "offscreen"],
   "host_permissions": [
     "http://localhost:3000/*",
     "http://localhost:3008/*",
@@ -26,8 +26,8 @@
   "devtools_page": "devtools.html",
   "web_accessible_resources": [
     {
-      "resources": ["icon-128.png", "icon-34.png"],
-      "matches": []
+      "resources": ["assets/sounds/bubble.wav"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

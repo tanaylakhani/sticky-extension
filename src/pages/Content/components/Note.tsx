@@ -26,6 +26,7 @@ import { uploadImage, updateNote, deleteNote } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
 import { INoteSize } from '../../../enums';
+// import bubbleSound from '../../../assets/sounds/bubble.wav';
 
 interface Board {
   id: string;
@@ -246,7 +247,15 @@ const Note: React.FC<NoteProps> = ({
     setLocalColor(note.color);
   }, [note.color]);
 
+  const playBubbleSound = () => {
+    const audio1 = new Audio('assets/sounds/bubble.wav');
+    audio1.volume = 1;
+    audio1.play();
+  };
+
   const handleSizeToggle = async () => {
+    // play audio
+    playBubbleSound();
     const newSize =
       currentSize === INoteSize.SMALL ? INoteSize.LARGE : INoteSize.SMALL;
     setCurrentSize(newSize);
