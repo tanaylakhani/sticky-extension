@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sticky Notes",
-  "description": "Chrome extension for sticky notes",
+  "description": "Notes for your browser",
   "options_page": "options.html",
   "background": { "service_worker": "background.bundle.js" },
   "action": {

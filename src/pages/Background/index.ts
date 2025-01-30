@@ -1,4 +1,6 @@
-type CreateStickyMessage = {
+import { BASE_URL } from '../../constants';
+
+export type CreateStickyMessage = {
   type: 'CREATE_STICKY';
   data: {
     text: string;
@@ -109,4 +111,10 @@ chrome.runtime.onMessage.addListener(async (message) => {
       sound: message.sound,
     });
   }
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.tabs.create({
+    url: `${BASE_URL}/extension/code`,
+  });
 });

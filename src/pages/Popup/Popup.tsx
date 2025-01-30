@@ -4,6 +4,7 @@ import { fetchBoards, fetchUserProfile } from '../../services/api';
 import { Board } from '../../types';
 import { ExternalLink, Settings, StickyNote, Layout } from 'lucide-react';
 import { BASE_URL } from '../../constants';
+import { CreateStickyMessage } from '../Background';
 
 interface UserProfile {
   name: string;
@@ -119,8 +120,16 @@ const Popup = () => {
           <h1>STICKY</h1>
         </div>
         <div className="actions">
-          <ExternalLink className="icon" size={20} />
-          <Settings className="icon" size={20} />
+          <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="icon" size={20} />
+          </a>
+          <a
+            href={`${BASE_URL}/settings`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Settings className="icon" size={20} />
+          </a>
         </div>
       </header>
 
