@@ -37,22 +37,22 @@ interface Board {
 interface NoteProps {
   id: string;
   initialText:
-    | string
-    | {
+  | string
+  | {
+    type: string;
+    content: Array<{
+      type: string;
+      content?: Array<{
         type: string;
-        content: Array<{
-          type: string;
-          content?: Array<{
-            type: string;
-            text?: string;
-            attrs?: {
-              src?: string;
-              alt?: string | null;
-              title?: string | null;
-            };
-          }>;
-        }>;
-      };
+        text?: string;
+        attrs?: {
+          src?: string;
+          alt?: string | null;
+          title?: string | null;
+        };
+      }>;
+    }>;
+  };
   position: {
     x: number;
     y: number;
@@ -75,6 +75,16 @@ const Note: React.FC<NoteProps> = ({
   const [showBoardMenu, setShowBoardMenu] = useState(false);
   const [localColor, setLocalColor] = useState(note.color);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Sync currentPosition with note.position when it changes (e.g., after reload)
+  useEffect(() => {
+    setCurrentPosition(note.position);
+  }, [note.position]);
+
+  // Sync currentSize with note.size when it changes
+  useEffect(() => {
+    setCurrentSize(note.size || INoteSize.SMALL);
+  }, [note.size]);
   const noteRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -102,11 +112,9 @@ const Note: React.FC<NoteProps> = ({
         data: {
           type: 'note',
           position: currentPosition,
-          positionAbsolute: currentPosition,
-          position_on_webpage: currentPosition,
           data: {
             content: editor?.getJSON(),
-            color: note.color,
+            color: localColor,
             title: '',
           },
         },
@@ -123,19 +131,19 @@ const Note: React.FC<NoteProps> = ({
   const initialContent =
     typeof initialText === 'string'
       ? {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: initialText,
-                },
-              ],
-            },
-          ],
-        }
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: initialText,
+              },
+            ],
+          },
+        ],
+      }
       : { type: 'doc', content: initialText.content };
 
   // Debounced update function to prevent too many API calls
@@ -147,11 +155,9 @@ const Note: React.FC<NoteProps> = ({
           data: {
             type: 'note',
             position: position,
-            positionAbsolute: position,
-            position_on_webpage: position,
             data: {
               content: content,
-              color: note.color,
+              color: localColor,
               title: '',
             },
           },
@@ -161,7 +167,7 @@ const Note: React.FC<NoteProps> = ({
         console.error('Error updating note:', error);
       }
     }, 1000),
-    [note.id, note.color]
+    [note.id, localColor]
   );
 
   const editor = useEditor({
@@ -226,9 +232,7 @@ const Note: React.FC<NoteProps> = ({
         websiteUrl: window.location.href,
         data: {
           type: 'note',
-          position: note.position,
-          positionAbsolute: note.position,
-          position_on_webpage: note.position,
+          position: currentPosition,
           data: {
             content: note.text,
             color: newColor,
@@ -260,11 +264,9 @@ const Note: React.FC<NoteProps> = ({
         data: {
           type: 'note',
           position: currentPosition,
-          positionAbsolute: currentPosition,
-          position_on_webpage: currentPosition,
           data: {
             content: editor?.getJSON(),
-            color: note.color,
+            color: localColor,
             title: '',
             size: newSize,
           },
@@ -280,7 +282,7 @@ const Note: React.FC<NoteProps> = ({
   return (
     <Draggable
       handle=".note-header"
-      defaultPosition={note.position}
+      position={currentPosition}
       onDrag={(e, data) => {
         setIsDragging(true);
         handleDrag(e, data);
@@ -293,9 +295,8 @@ const Note: React.FC<NoteProps> = ({
     >
       <div
         ref={noteRef}
-        className={`sticky-note ${localColor} ${
-          isTextAreaInFocus ? 'focused' : ''
-        } ${currentSize}`}
+        className={`sticky-note ${localColor} ${isTextAreaInFocus ? 'focused' : ''
+          } ${currentSize}`}
         style={
           {
             // rotate: isDragging ? '-3deg' : '0deg',
@@ -327,9 +328,8 @@ const Note: React.FC<NoteProps> = ({
                   {colors.map((color) => (
                     <button
                       key={color}
-                      className={`color-menu-item ${
-                        color === localColor ? 'active' : ''
-                      }`}
+                      className={`color-menu-item ${color === localColor ? 'active' : ''
+                        }`}
                       style={{
                         backgroundColor:
                           colorMap[color as keyof typeof colorMap],
@@ -362,9 +362,8 @@ const Note: React.FC<NoteProps> = ({
                   {boards.map((board) => (
                     <button
                       key={board.id}
-                      className={`board-menu-item ${
-                        note.boardId === board.id ? 'active' : ''
-                      }`}
+                      className={`board-menu-item ${note.boardId === board.id ? 'active' : ''
+                        }`}
                       onClick={() => {
                         playBubbleSound();
                         handleBoardSelect(board.id);
@@ -433,9 +432,8 @@ const Note: React.FC<NoteProps> = ({
                   editor.chain().focus().toggleBold().run();
                 }}
                 onMouseEnter={playOinkSound}
-                className={`toolbar-button ${
-                  editor.isActive('bold') ? 'active' : ''
-                }`}
+                className={`toolbar-button ${editor.isActive('bold') ? 'active' : ''
+                  }`}
               >
                 <FaBold />
               </button>
@@ -445,9 +443,8 @@ const Note: React.FC<NoteProps> = ({
                   editor.chain().focus().toggleItalic().run();
                 }}
                 onMouseEnter={playOinkSound}
-                className={`toolbar-button ${
-                  editor.isActive('italic') ? 'active' : ''
-                }`}
+                className={`toolbar-button ${editor.isActive('italic') ? 'active' : ''
+                  }`}
               >
                 <FaItalic />
               </button>
@@ -457,9 +454,8 @@ const Note: React.FC<NoteProps> = ({
                   editor.chain().focus().toggleUnderline().run();
                 }}
                 onMouseEnter={playOinkSound}
-                className={`toolbar-button ${
-                  editor.isActive('underline') ? 'active' : ''
-                }`}
+                className={`toolbar-button ${editor.isActive('underline') ? 'active' : ''
+                  }`}
               >
                 <FaUnderline />
               </button>
@@ -469,9 +465,8 @@ const Note: React.FC<NoteProps> = ({
                   editor.chain().focus().toggleBulletList().run();
                 }}
                 onMouseEnter={playOinkSound}
-                className={`toolbar-button ${
-                  editor.isActive('bulletList') ? 'active' : ''
-                }`}
+                className={`toolbar-button ${editor.isActive('bulletList') ? 'active' : ''
+                  }`}
               >
                 <FaListUl />
               </button>

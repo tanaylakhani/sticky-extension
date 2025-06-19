@@ -5,8 +5,8 @@ interface NoteData {
   id: string;
   type: 'note';
   position: { x: number; y: number };
-  positionAbsolute: { x: number; y: number };
-  position_on_webpage: { x: number; y: number };
+  positionAbsolute?: { x: number; y: number };
+  position_on_webpage?: { x: number; y: number };
   boardId?: string;
   data: {
     content: any;
