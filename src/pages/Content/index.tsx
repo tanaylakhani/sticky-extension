@@ -37,7 +37,8 @@ const createShadowContainer = (): HTMLDivElement => {
       height: 100%;
       min-height: 200px;
       padding: 0;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       z-index: 10000;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -55,7 +56,9 @@ const createShadowContainer = (): HTMLDivElement => {
       cursor: move;
       margin: 0;
       border-radius: 12px 12px 0 0;
-      background-color: rgba(0, 0, 0, 0.05);
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       flex-shrink: 0;
     }
 
@@ -163,10 +166,12 @@ const createShadowContainer = (): HTMLDivElement => {
       display: flex;
       gap: 4px;
       padding: 8px 12px;
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
       margin-top: auto;
       flex-shrink: 0;
-      background-color: inherit;
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       border-radius: 0 0 12px 12px;
     }
 
@@ -240,37 +245,51 @@ const createShadowContainer = (): HTMLDivElement => {
     }
 
     .focused {
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
     }
 
-    /* Color-specific styles with text/icon colors */
+    /* Color-specific styles with transparency and blur effects */
     .sticky-note.GREEN {
-      background-color: #acebbf;
+      background-color: rgba(172, 235, 191, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #2a5a35;
     }
 
     .sticky-note.BLUE {
-      background-color: #a1d4fa;
+      background-color: rgba(161, 212, 250, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #1a4971;
     }
 
     .sticky-note.RED {
-      background-color: #ffa67e;
+      background-color: rgba(255, 166, 126, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #8b3f1d;
     }
 
     .sticky-note.YELLOW {
-      background-color: #ffcf7c;
+      background-color: rgba(255, 207, 124, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #8b6534;
     }
 
     .sticky-note.PURPLE {
-      background-color: #d8b8ff;
+      background-color: rgba(216, 184, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #5b3a80;
     }
 
     .sticky-note.GRAY {
-      background-color: #d2dce4;
+      background-color: rgba(210, 220, 228, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #3e4e5e;
     }
 
