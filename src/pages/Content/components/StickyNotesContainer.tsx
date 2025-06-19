@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Note from './Note';
 import DraggableIcon from './DraggableIcon';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchNotes, createNote, fetchBoards } from '../../../services/api';
+import { fetchNotes, createNote, fetchBoards, deleteNote } from '../../../services/api';
 import { StickyNote, TipTapContent } from '../../../types';
 
 interface Board {
@@ -35,19 +35,15 @@ const StickyNotesContainer: React.FC = () => {
       const data = await fetchNotes();
       if (!data) return;
 
-      const notes = data?.map((note: any) => {
-        const mappedNote = {
-          id: note.data.id || note.id,
-          position: note.data.position,
-          text: note.data.data.content,
-          color: note.data.data.color,
-          websiteUrl: note.websiteUrl,
-          boardId: note.boardId,
-          size: note.data.data.size,
-        };
-        console.log('Mapped note position:', mappedNote.position, 'from raw data:', note.data.position);
-        return mappedNote;
-      });
+      const notes = data?.map((note: any) => ({
+        id: note.data.id || note.id,
+        position: note.data.position,
+        text: note.data.data.content,
+        color: note.data.data.color,
+        websiteUrl: note.websiteUrl,
+        boardId: note.boardId,
+        size: note.data.data.size,
+      }));
       setNotes(notes);
 
       const notesForCurrentUrl = notes.filter(
@@ -113,6 +109,36 @@ const StickyNotesContainer: React.FC = () => {
     setNotesToRender([]);
     setCurrentUrl('');
     setBoards([]);
+  };
+
+  // Optimistic delete: remove note from state immediately
+  const handleOptimisticDelete = async (noteId: string) => {
+    // Store the deleted note for potential rollback
+    const deletedNote = notes.find(note => note.id === noteId);
+    if (!deletedNote) return;
+
+    // Optimistically remove from state immediately
+    const filteredNotes = notes.filter(note => note.id !== noteId);
+    setNotes(filteredNotes);
+
+    const filteredNotesToRender = filteredNotes.filter(
+      note => note.websiteUrl === window.location.href
+    );
+    setNotesToRender(filteredNotesToRender);
+
+    // Attempt to delete on server
+    try {
+      await deleteNote(noteId);
+      // Success - the optimistic update was correct, nothing more to do
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      // Rollback: restore the note to state
+      setNotes(prevNotes => [...prevNotes, deletedNote]);
+      setNotesToRender(prevNotes => {
+        const allNotes = [...prevNotes, deletedNote];
+        return allNotes.filter(note => note.websiteUrl === window.location.href);
+      });
+    }
   };
 
   useEffect(() => {
@@ -236,6 +262,7 @@ const StickyNotesContainer: React.FC = () => {
           loadNotes={loadNotes}
           note={note}
           boards={boards}
+          onOptimisticDelete={handleOptimisticDelete}
         />
       ))}
     </>

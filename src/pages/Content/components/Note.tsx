@@ -22,7 +22,7 @@ import {
   FaCompressAlt,
 } from 'react-icons/fa';
 import Tiptap from './Tiptap';
-import { uploadImage, updateNote, deleteNote } from '../../../services/api';
+import { uploadImage, updateNote } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
 import { INoteSize } from '../../../enums';
@@ -62,6 +62,7 @@ interface NoteProps {
   note: StickyNote;
   boards: Board[];
   size?: INoteSize;
+  onOptimisticDelete: (noteId: string) => Promise<void>;
 }
 
 const Note: React.FC<NoteProps> = ({
@@ -69,6 +70,7 @@ const Note: React.FC<NoteProps> = ({
   loadNotes,
   note,
   boards,
+  onOptimisticDelete,
 }) => {
   const [isTextAreaInFocus, setIsTextAreaInFocus] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(note.position);
@@ -215,12 +217,9 @@ const Note: React.FC<NoteProps> = ({
   };
 
   const handleDeleteNote = async (id: string) => {
-    try {
-      await deleteNote(id);
-      await loadNotes();
-    } catch (error) {
-      console.error('Error deleting note:', error);
-    }
+    // Use optimistic delete - note will be removed from UI immediately
+    // and restored if the server call fails
+    await onOptimisticDelete(id);
   };
 
   const handleColorChange = async (id: string, newColor: string) => {
