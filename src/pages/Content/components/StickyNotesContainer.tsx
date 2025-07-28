@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Note from './Note';
 import DraggableIcon from './DraggableIcon';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchNotes, createNote, fetchBoards, deleteNote } from '../../../services/api';
+import {
+  createNote,
+  deleteNote,
+  fetchBoards,
+  fetchNotes,
+} from '../../../services/api';
 import { StickyNote, TipTapContent } from '../../../types';
 
 interface Board {
@@ -16,6 +21,12 @@ const StickyNotesContainer: React.FC = () => {
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
   const [currentUrl, setCurrentUrl] = useState('');
   const [boards, setBoards] = useState<Board[]>([]);
+
+  // Check if current domain should be excluded
+  const isExcludedDomain = () => {
+    const hostname = window.location.hostname.toLowerCase();
+    return hostname === 'thestickyapp.com' || hostname === 'www.thestickyapp.com';
+  };
 
   const loadBoards = async () => {
     try {
@@ -243,15 +254,17 @@ const StickyNotesContainer: React.FC = () => {
 
   return (
     <>
-      <DraggableIcon
-        createNote={async (text, position) => {
-          const success = await createNoteOnServer(text, position);
-          if (success) {
-            await loadNotes();
-          }
-          return success;
-        }}
-      />
+      {!isExcludedDomain() && (
+        <DraggableIcon
+          createNote={async (text, position) => {
+            const success = await createNoteOnServer(text, position);
+            if (success) {
+              await loadNotes();
+            }
+            return success;
+          }}
+        />
+      )}
       {notesToRender?.map((note) => (
         <Note
           key={note.id}
