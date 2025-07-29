@@ -21,6 +21,8 @@ const Popup = () => {
   const [isValidCode, setIsValidCode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showDraggableIcon, setShowDraggableIcon] = useState<boolean>(true);
 
   const loadBoards = async (userCode: string) => {
     setIsLoading(true);
@@ -99,8 +101,22 @@ const Popup = () => {
     });
   };
 
+  const handleSettingsToggle = async (setting: string, value: boolean) => {
+    await chrome.storage.local.set({ [setting]: value });
+    
+    // Send message to content script to update settings
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'SETTINGS_UPDATED',
+          data: { [setting]: value },
+        });
+      }
+    });
+  };
+
   useEffect(() => {
-    chrome.storage.local.get(['code', 'lastSelectedBoardId'], (result) => {
+    chrome.storage.local.get(['code', 'lastSelectedBoardId', 'showDraggableIcon'], (result) => {
       console.log(result);
       if (result.code) {
         setCode(result.code);
@@ -108,6 +124,7 @@ const Popup = () => {
         loadBoards(result.code);
       }
       setLastSelectedBoardId(result.lastSelectedBoardId || null);
+      setShowDraggableIcon(result.showDraggableIcon !== false); // Default to true
     });
   }, []);
 
@@ -123,15 +140,49 @@ const Popup = () => {
           <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="icon" size={20} />
           </a>
-          <a
-            href={`${BASE_URL}/settings`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0',
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
             <Settings className="icon" size={20} />
-          </a>
+          </button>
         </div>
       </header>
+
+      {showSettings && (
+        <div className="settings-container">
+          <div className="settings-header">
+            <h3>Settings</h3>
+          </div>
+          <div className="settings-option">
+            <div className="setting-info">
+              <span className="setting-title">Show Draggable Button</span>
+              <span className="setting-description">
+                Display the floating sticky note button on web pages
+              </span>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={showDraggableIcon}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  setShowDraggableIcon(newValue);
+                  handleSettingsToggle('showDraggableIcon', newValue);
+                }}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      )}
 
       {!isValidCode ? (
         <div className="login-container">

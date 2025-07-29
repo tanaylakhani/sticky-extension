@@ -21,6 +21,7 @@ const StickyNotesContainer: React.FC = () => {
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
   const [currentUrl, setCurrentUrl] = useState('');
   const [boards, setBoards] = useState<Board[]>([]);
+  const [showDraggableIcon, setShowDraggableIcon] = useState(true);
 
   // Check if current domain should be excluded
   const isExcludedDomain = () => {
@@ -162,6 +163,7 @@ const StickyNotesContainer: React.FC = () => {
           url?: string;
           position?: { x: number; y: number };
           code?: string;
+          showDraggableIcon?: boolean;
         };
       },
       sender: chrome.runtime.MessageSender,
@@ -220,6 +222,12 @@ const StickyNotesContainer: React.FC = () => {
           chrome.storage.local.set({ code: message.data?.code });
         }
       }
+
+      if (message.type === 'SETTINGS_UPDATED') {
+        if (message.data?.showDraggableIcon !== undefined) {
+          setShowDraggableIcon(message.data.showDraggableIcon);
+        }
+      }
     };
 
     console.log({ lastClickCoords });
@@ -230,6 +238,11 @@ const StickyNotesContainer: React.FC = () => {
   useEffect(() => {
     loadNotes();
     loadBoards();
+
+    // Load showDraggableIcon setting
+    chrome.storage.local.get('showDraggableIcon').then((result) => {
+      setShowDraggableIcon(result.showDraggableIcon !== false); // Default to true
+    });
 
     // Capture right-click coordinates
     const handleContextMenu = (e: MouseEvent) => {
@@ -254,7 +267,7 @@ const StickyNotesContainer: React.FC = () => {
 
   return (
     <>
-      {!isExcludedDomain() && (
+      {!isExcludedDomain() && showDraggableIcon && (
         <DraggableIcon
           createNote={async (text, position) => {
             const success = await createNoteOnServer(text, position);
