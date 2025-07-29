@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Draggable from 'react-draggable';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -12,21 +12,22 @@ import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import {
   FaBold,
-  FaItalic,
-  FaListUl,
-  FaUnderline,
-  FaImage,
-  FaTrash,
+  FaCompressAlt,
   FaEllipsisV,
   FaExpandAlt,
-  FaCompressAlt,
+  FaImage,
+  FaItalic,
+  FaListUl,
+  FaTrash,
+  FaUnderline,
 } from 'react-icons/fa';
 import Tiptap from './Tiptap';
-import { uploadImage, updateNote } from '../../../services/api';
+import { updateNote, uploadImage } from '../../../services/api';
 import debounce from 'lodash/debounce';
 import { StickyNote } from '../../../types';
 import { INoteSize } from '../../../enums';
 import { playBubbleSound, playOinkSound } from '../utils/soundUtils';
+
 // import bubbleSound from '../../../assets/sounds/bubble.wav';
 
 interface Board {
@@ -280,13 +281,11 @@ const Note: React.FC<NoteProps> = ({
 
   return (
     <Draggable
-      handle=".note-header"
       position={currentPosition}
       onDrag={(e, data) => {
         setIsDragging(true);
         handleDrag(e, data);
       }}
-      bounds="body"
       onStart={() => {
         // Remove the isDragging set from here
       }}
@@ -306,7 +305,7 @@ const Note: React.FC<NoteProps> = ({
           }
         }
       >
-        <div className="note-header">
+                <div className="note-header">
           <div className="note-header-left">
             <div className="color-menu-container" ref={colorMenuRef}>
               <button
@@ -316,6 +315,7 @@ const Note: React.FC<NoteProps> = ({
                   setShowColorMenu(!showColorMenu);
                 }}
                 onMouseEnter={playOinkSound}
+                onMouseDown={(e) => e.stopPropagation()}
                 style={{
                   backgroundColor:
                     colorMap[localColor as keyof typeof colorMap],
@@ -339,6 +339,7 @@ const Note: React.FC<NoteProps> = ({
                         handleColorChange(note.id, color);
                         setShowColorMenu(false);
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                     />
                   ))}
                 </div>
@@ -352,6 +353,7 @@ const Note: React.FC<NoteProps> = ({
                   setShowBoardMenu(!showBoardMenu);
                 }}
                 onMouseEnter={playOinkSound}
+                onMouseDown={(e) => e.stopPropagation()}
                 title="Select board"
               >
                 <FaEllipsisV />
@@ -367,6 +369,7 @@ const Note: React.FC<NoteProps> = ({
                         playBubbleSound();
                         handleBoardSelect(board.id);
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       {board.name}
                     </button>
@@ -393,6 +396,7 @@ const Note: React.FC<NoteProps> = ({
                     playOinkSound();
                   }
                 }}
+                onMouseDown={(e) => e.stopPropagation()}
               >
                 {currentSize === INoteSize.SMALL ? (
                   <FaExpandAlt />
@@ -402,6 +406,7 @@ const Note: React.FC<NoteProps> = ({
               </button>
             </div>
           </div>
+          
           <button
             className="close-button"
             onClick={() => {
@@ -409,6 +414,7 @@ const Note: React.FC<NoteProps> = ({
               handleDeleteNote(note.id);
             }}
             onMouseEnter={playOinkSound}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <FaTrash />
           </button>

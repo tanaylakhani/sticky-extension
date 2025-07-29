@@ -53,13 +53,14 @@ const createShadowContainer = (): HTMLDivElement => {
       justify-content: space-between;
       align-items: center;
       padding: 6px 12px;
-      cursor: move;
       margin: 0;
       border-radius: 12px 12px 0 0;
       background-color: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       flex-shrink: 0;
+      cursor: move;
+      user-select: none;
     }
 
     .note-header-left {
