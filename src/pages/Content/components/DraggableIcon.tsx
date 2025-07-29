@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Draggable from 'react-draggable';
 import { BsSticky } from 'react-icons/bs';
+import { FaSpinner } from 'react-icons/fa';
 import './DraggableIcon.css';
 
 interface DraggableIconProps {
@@ -25,6 +26,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
   const isDragging = useRef(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const iconRef = useRef<HTMLDivElement>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     // Load position from chrome storage
@@ -96,7 +98,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
 
   const iconStyle: React.CSSProperties = {
     position: 'fixed',
-    cursor: 'move',
+    cursor: isCreating ? 'wait' : 'move',
     background: '#ffffff',
     padding: '10px 15px',
     borderRadius: '20px',
@@ -106,16 +108,23 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
     alignItems: 'center',
     gap: '8px',
     userSelect: 'none',
+    opacity: isCreating ? 0.7 : 1,
+    transition: 'opacity 0.2s ease',
   };
 
   const handleClick = async (e: React.MouseEvent) => {
-    // Only create note if we didn't actually drag
-    if (!isDragging.current) {
+    // Only create note if we didn't actually drag and not already creating
+    if (!isDragging.current && !isCreating) {
       e.preventDefault();
       e.stopPropagation();
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2 + window.scrollY;
-      await createNote('', { x: centerX, y: centerY });
+      setIsCreating(true);
+      try {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2 + window.scrollY;
+        await createNote('', { x: centerX, y: centerY });
+      } finally {
+        setIsCreating(false);
+      }
     }
   };
 
@@ -161,7 +170,17 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
         className="draggable-sticky-icon"
         onClick={handleClick}
       >
-        <BsSticky size={20} color="#4CAF50" />
+        {isCreating ? (
+          <FaSpinner 
+            size={20} 
+            color="#4CAF50" 
+            style={{ 
+              animation: 'spin 1s linear infinite' 
+            }} 
+          />
+        ) : (
+          <BsSticky size={20} color="#4CAF50" />
+        )}
         <span
           style={{
             fontSize: '14px',
@@ -171,7 +190,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ createNote }) => {
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         >
-          New Sticky
+          {isCreating ? 'Creating...' : 'New Sticky'}
         </span>
       </div>
     </Draggable>
