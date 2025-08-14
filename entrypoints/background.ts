@@ -35,51 +35,26 @@ export default defineBackground(() => {
   );
 
   // Tab update listener
-  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     if (!changeInfo.url) return;
 
-    if (changeInfo?.url?.includes('/extension/code')) {
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: tabId },
-          func: () => {
-            return new Promise((resolve) => {
-              let attempts = 0;
-              const maxAttempts = 10;
-              const checkInterval = 1000;
+    // Try to extract code directly from URL params (no DOM injection → no flicker)
+    if (changeInfo.url.includes('/extension/code')) {
+      try {
+        const url = new URL(changeInfo.url);
+        const codeParam = url.searchParams.get('code')?.trim();
+        if (codeParam) {
+          chrome.storage.local.set({ code: codeParam });
 
-              const checkForElement = () => {
-                const element = document.querySelector(
-                  '#sticky-chrome-extension-code'
-                );
-                if (element) {
-                  resolve(element.textContent || '');
-                } else if (attempts < maxAttempts) {
-                  attempts++;
-                  setTimeout(checkForElement, checkInterval);
-                } else {
-                  resolve('');
-                }
-              };
+          chrome.tabs.sendMessage(tabId, {
+            type: 'CODE_DETECTED',
+            data: { code: codeParam },
+          });
 
-              checkForElement();
-            });
-          },
-        },
-        (results) => {
-          const code = results?.[0]?.result || '';
-          chrome.tabs.sendMessage(
-            tabId,
-            {
-              type: 'CODE_DETECTED',
-              data: { code },
-            },
-            () => {
-              chrome.tabs.remove(tabId);
-            }
-          );
+          const welcomeUrl = chrome.runtime.getURL('welcome.html');
+          chrome.tabs.create({ url: welcomeUrl }, () => chrome.tabs.remove(tabId));
         }
-      );
+      } catch {}
     }
 
     chrome.tabs.sendMessage(tabId, {
@@ -116,10 +91,10 @@ export default defineBackground(() => {
     }
   });
 
-  // Open extension page on install
+  // Open login page on install (extension-aware)
   chrome.runtime.onInstalled.addListener(() => {
     chrome.tabs.create({
-      url: `${BASE_URL}/extension/code`,
+      url: `${BASE_URL}/login/google?ext=1`,
     });
   });
 });

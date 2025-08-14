@@ -131,6 +131,21 @@ const App = () => {
     });
   }, []);
 
+  // react to code saved from extension login tab
+  useEffect(() => {
+    const handler = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName !== 'local') return;
+      if (changes.code && changes.code.newValue) {
+        const newCode = changes.code.newValue as string;
+        setCode(newCode);
+        setIsValidCode(true);
+        loadBoards(newCode);
+      }
+    };
+    chrome.storage.onChanged.addListener(handler);
+    return () => chrome.storage.onChanged.removeListener(handler);
+  }, []);
+
   return (
     <div className="App antialiased">
       <header className="header">
@@ -189,24 +204,17 @@ const App = () => {
 
       {!isValidCode ? (
         <div className="login-container">
-          <form onSubmit={handleCodeSubmit}>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter your code"
-              className="login-input"
-            />
-            <button type="submit" disabled={isLoading} className="login-button">
-              {isLoading ? 'Loading...' : 'Submit'}
-            </button>
-          </form>
+          <button
+            className="login-button"
+            onClick={() => {
+              chrome.tabs.create({ url: `${BASE_URL}/login/google?ext=1` });
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading…' : 'Sign in with Sticky'}
+          </button>
           <p className="login-text">
-            Login to{' '}
-            <a href={`${BASE_URL}/extension/code`} target="_blank">
-              sticky web app
-            </a>{' '}
-            to get the code.
+            A new tab will open to securely sign in. It will close automatically once done.
           </p>
         </div>
       ) : (
