@@ -5,6 +5,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Sticky Notes',
+    description: 'Notes for your browser',
     permissions: [
       'contextMenus',
       'tabs',

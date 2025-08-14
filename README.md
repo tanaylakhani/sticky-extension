@@ -56,11 +56,18 @@ bun run zip:firefox
 ```
 Artifacts are output to `.output/*`.
 
-### Getting started (login + code)
+### Getting started (seamless sign-in)
 1. Install/run the extension.
-2. On first install, a tab opens to `…/extension/code` to fetch your code.
-3. Enter the code in the popup. Your profile and boards should appear when validated.
-4. Optional: toggle "Show Draggable Button" in the popup settings.
+2. Open the popup and click “Sign in with Sticky”. A tab opens to the Sticky login (Google by default). If you switch to Email/Password, the extension flag is preserved.
+3. After successful login, the tab auto-closes and an in‑extension Welcome page opens. No manual code entry is required.
+4. The popup will show your profile and boards automatically. Optional: toggle "Show Draggable Button" in settings.
+
+### Auth flow (how it works)
+- The popup opens `…/login/google?ext=1` (or credentials with `?ext=1`).
+- The dashboard fetches a short‑lived extension code and redirects to `…/extension/code?ext=1&code=…`.
+- The extension background reads `code` from the URL (no DOM scraping), saves it to `chrome.storage.local`, opens the in‑extension Welcome page, and closes the tab.
+- The popup listens for the stored `code` and loads boards/profile. Logout clears the stored `code`.
+- Switching to Email/Password preserves `?ext=1` and performs the same handoff on success.
 
 ### Usage
 - **Create a note**
@@ -108,7 +115,8 @@ wxt.config.ts           # WXT + MV3 config
 - Notes, boards, profile fetched via `API_BASE_URL`.
 
 ### Troubleshooting
-- **No notes appear**: ensure you entered a valid code in the popup; refresh the tab.
+- **Signed in but no data**: open the popup and click “Sign in with Sticky” again; the Welcome screen should appear and the popup will refresh automatically.
+- **Login tab doesn’t close**: the extension only proceeds when a valid `code` is present. If login was canceled, retry from the popup.
 - **Floating button missing**: enable it in popup settings; it’s disabled on `thestickyapp.com`.
 - **Audio not playing**: check offscreen permission; background sets up `offscreen.html` when needed.
 - **Images won’t delete**: image delete relies on a Cloudinary `public_id` in the URL.
