@@ -65,6 +65,7 @@ interface NoteProps {
   size?: INoteSize;
   onOptimisticDelete: (noteId: string) => Promise<void>;
   onPositionChange?: (noteId: string, position: { x: number; y: number }) => void;
+  autoFocus?: boolean;
 }
 
 const Note: React.FC<NoteProps> = ({
@@ -74,6 +75,7 @@ const Note: React.FC<NoteProps> = ({
   boards,
   onOptimisticDelete,
   onPositionChange,
+  autoFocus = false,
 }) => {
   const [isTextAreaInFocus, setIsTextAreaInFocus] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(note.position);
@@ -203,6 +205,14 @@ const Note: React.FC<NoteProps> = ({
       debouncedUpdate(json, currentPosition);
     },
   });
+
+  // Focus editor when note is newly created and editor is ready
+  useEffect(() => {
+    if (autoFocus && editor) {
+      // Slight delay to ensure DOM is ready
+      setTimeout(() => editor.chain().focus().run(), 0);
+    }
+  }, [autoFocus, editor]);
 
   const handleDrag = (_e: any, data: { x: number; y: number }) => {
     const newPosition = { x: data.x, y: data.y };

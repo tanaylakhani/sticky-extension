@@ -23,6 +23,7 @@ const StickyNotesContainer: React.FC = () => {
   const [lastClickCoords, setLastClickCoords] = useState({ x: 0, y: 0 });
   const [currentUrl, setCurrentUrl] = useState('');
   const [boards, setBoards] = useState<Board[]>([]);
+  const [lastCreatedNoteId, setLastCreatedNoteId] = useState<string | null>(null);
   const [showDraggableIcon, setShowDraggableIcon] = useState(true);
 
   // Check if current domain should be excluded
@@ -124,6 +125,7 @@ const StickyNotesContainer: React.FC = () => {
     position: { x: number; y: number }
   ) => {
     const noteId = uuidv4();
+    setLastCreatedNoteId(noteId);
     
     // Create TipTap JSON content
     const content: TipTapContent = {
@@ -386,6 +388,7 @@ const StickyNotesContainer: React.FC = () => {
           boards={boards}
           onOptimisticDelete={handleOptimisticDelete}
           onPositionChange={handlePositionChange}
+          autoFocus={note.id === lastCreatedNoteId}
         />
       ))}
     </>
