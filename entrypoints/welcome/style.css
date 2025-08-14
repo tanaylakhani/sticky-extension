@@ -129,4 +129,38 @@ body {
   to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
+/* Skeletons for email row to avoid layout shift */
+.skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.1), rgba(0,0,0,0.06));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+
+.skeleton.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+}
+
+.skeleton.text {
+  width: 200px;
+  height: 14px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Smoother fade + blur-in for profile row */
+.fade-blur-in {
+  animation: fadeBlurIn 500ms ease forwards;
+}
+
+@keyframes fadeBlurIn {
+  from { opacity: 0; transform: translateY(4px); filter: blur(6px); }
+  60% { opacity: 1; filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
 

@@ -68,20 +68,23 @@ const Welcome: React.FC = () => {
       <div className="card reveal">
         <div className="logo-wrap"><img src={chrome.runtime.getURL('assets/img/logo.png')} alt="Sticky" width={72} height={72} style={{ borderRadius: 12, boxShadow: '0 4px 18px rgba(0, 0, 0, 0.12)' }} /></div>
         <div className="heading">
-          <h1>{(() => {
-            const firstName = profile?.name?.split?.(' ')?.[0] || profile?.email?.split?.('@')?.[0];
-            return firstName ? `Welcome, ${firstName}` : 'Welcome to Sticky';
-          })()}</h1>
-          {/* <span className="inline-badge">Signed in</span> */}
+          <h1>Welcome to Sticky</h1>
         </div>
-        {profile && (
-          <div className="reveal" style={{ animationDelay: '90ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-            {profile?.picture ? (
-              <img src={profile.picture} alt={profile?.name || 'User'} width={36} height={36} style={{ borderRadius: 999 }} />
-            ) : null}
-            {profile?.email ? <span style={{ color: '#666' }}>{profile.email}</span> : null}
-          </div>
-        )}
+        <div className="reveal" style={{ animationDelay: '90ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 36 }}>
+          {profile ? (
+            <div className="profile-content fade-blur-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              {profile?.picture ? (
+                <img src={profile.picture} alt={profile?.name || 'User'} width={36} height={36} style={{ borderRadius: 999 }} />
+              ) : null}
+              {profile?.email ? <span style={{ color: '#666' }}>{profile.email}</span> : null}
+            </div>
+          ) : (
+            <div className="profile-skeleton" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <div className="skeleton avatar" />
+              <div className="skeleton text" />
+            </div>
+          )}
+        </div>
         <div className="muted reveal" style={{ animationDelay: '120ms' }}>
           You’re all set. Use the popup to pick a board and manage settings. The most powerful sticky note app for the web.
         </div>
