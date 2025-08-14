@@ -56,6 +56,7 @@ const NewStickyButton: React.FC<NewStickyButtonProps> = ({ onCreate }) => {
   const y = useMotionValue(0);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const didAutoAnchorRef = useRef(false);
+  const [isReady, setIsReady] = useState(hasStoredPosition);
   const [isDragging, setIsDragging] = useState(false);
   const cooldown = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -84,6 +85,7 @@ const NewStickyButton: React.FC<NewStickyButtonProps> = ({ onCreate }) => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
     setPosition(next);
     didAutoAnchorRef.current = true;
+    setIsReady(true);
   }, [hasStoredPosition]);
 
   // Constrain drag area slightly within viewport
@@ -165,7 +167,7 @@ const NewStickyButton: React.FC<NewStickyButtonProps> = ({ onCreate }) => {
 
   return (
     <motion.div
-      style={{ x, y, position: 'fixed', top: 0, left: 0, zIndex: 2147483647 }}
+      style={{ x, y, position: 'fixed', top: 0, left: 0, zIndex: 2147483647, visibility: isReady ? 'visible' : 'hidden' }}
       drag
       dragMomentum={false}
       dragElastic={0}

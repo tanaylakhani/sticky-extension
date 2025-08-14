@@ -1,4 +1,5 @@
 import { BASE_URL } from '../constants';
+import { defineBackground } from 'wxt/utils/define-background';
 
 export type CreateStickyMessage = {
   type: 'CREATE_STICKY';
@@ -20,7 +21,7 @@ export default defineBackground(() => {
 
   // Context menu click handler
   chrome.contextMenus.onClicked.addListener(
-    (info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab | undefined) => {
+    (info: any, tab: any) => {
       if (info.menuItemId === 'createSticky' && tab?.id) {
         const message: CreateStickyMessage = {
           type: 'CREATE_STICKY',
@@ -35,7 +36,7 @@ export default defineBackground(() => {
   );
 
   // Tab update listener
-  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+  chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: any) {
     if (!changeInfo.url) return;
 
     // Try to extract code directly from URL params (no DOM injection → no flicker)
@@ -81,7 +82,7 @@ export default defineBackground(() => {
   }
 
   // Message listener for audio playback
-  chrome.runtime.onMessage.addListener(async (message) => {
+  chrome.runtime.onMessage.addListener(async (message: any) => {
     if (message.action === 'play_sound') {
       await setupOffscreenDocument();
       chrome.runtime.sendMessage({
