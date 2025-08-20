@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { fetchBoards, fetchUserProfile } from '../../services/api';
+import { fetchBoards, fetchUserProfile, fetchUserPaymentStatus } from '../../services/api';
 import { Board } from '../../types';
-import { ExternalLink, Settings, StickyNote, Layout } from 'lucide-react';
+import { ExternalLink, Settings, StickyNote, Layout, User } from 'lucide-react';
 import { BASE_URL } from '../../constants';
 import { CreateStickyMessage } from '../background';
 
@@ -15,6 +15,24 @@ interface UserProfile {
   picture: string;
 }
 
+interface PaymentStatus {
+  userType: number;
+  subscriptionLifeCycle: number;
+}
+
+const USER_TYPE = {
+  FREE: 1,
+  MONTHLY_SUBSCRIPTION: 2,
+  ONE_TIME_FULL_ACCESS: 3,
+};
+
+const SUBSCRIPTION_LIFECYCLE = {
+  INVALID: 0,
+  STARTED: 1,
+  PAID: 2,
+  CANCELLED: 3,
+};
+
 const App = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [lastSelectedBoardId, setLastSelectedBoardId] = useState<string | null>(
@@ -26,22 +44,28 @@ const App = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showDraggableIcon, setShowDraggableIcon] = useState<boolean>(true);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
+  const [imageError, setImageError] = useState<boolean>(false);
 
   const loadBoards = async (userCode: string) => {
     setIsLoading(true);
     try {
-      const [boards, profile] = await Promise.all([
+      const [boards, profile, payment] = await Promise.all([
         fetchBoards(),
         fetchUserProfile(),
+        fetchUserPaymentStatus(),
       ]);
       setBoards(boards);
       setUserProfile(profile);
+      setPaymentStatus(payment);
       setIsValidCode(true);
+      setImageError(false); // Reset image error when new profile loads
       chrome.storage.local.set({ code: userCode });
     } catch (error) {
       setIsValidCode(false);
       setBoards([]);
       setUserProfile(null);
+      setPaymentStatus(null);
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +92,8 @@ const App = () => {
     setBoards([]);
     setLastSelectedBoardId(null);
     setUserProfile(null);
+    setPaymentStatus(null);
+    setImageError(false);
 
     // Send logout message to content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any[]) => {
@@ -102,6 +128,22 @@ const App = () => {
         chrome.tabs.sendMessage(tabs[0].id, message);
       }
     });
+  };
+
+  const handleNewBoard = () => {
+    const isProUser = paymentStatus && 
+      (paymentStatus.userType === USER_TYPE.MONTHLY_SUBSCRIPTION || 
+       paymentStatus.userType === USER_TYPE.ONE_TIME_FULL_ACCESS) &&
+      (paymentStatus.userType !== USER_TYPE.MONTHLY_SUBSCRIPTION || 
+       paymentStatus.subscriptionLifeCycle === SUBSCRIPTION_LIFECYCLE.PAID);
+
+    if (isProUser) {
+      // Open dashboard with query parameter to show create board modal
+      window.open(`${BASE_URL}/app?createBoard=true`, '_blank');
+    } else {
+      // Open pricing page for free users
+      window.open('https://www.thestickyapp.com/pricing', '_blank');
+    }
   };
 
   const handleSettingsToggle = async (setting: string, value: boolean) => {
@@ -224,7 +266,7 @@ const App = () => {
               <StickyNote size={24} />
               <span>Create New Sticky</span>
             </div>
-            <div className="action-card new-board">
+            <div className="action-card new-board" onClick={handleNewBoard}>
               <Layout size={24} />
               <span>Create New Board</span>
               <div className="pro-badge">PRO</div>
@@ -283,11 +325,18 @@ const App = () => {
               </div>
             ) : (
               <div className="user-profile">
-                <img
-                  src={userProfile.picture}
-                  alt={userProfile.name}
-                  className="avatar"
-                />
+                <div className="avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: !imageError && userProfile.picture ? 'none' : '#f0f0f0' }}>
+                  {!imageError && userProfile.picture ? (
+                    <img
+                      src={userProfile.picture}
+                      alt={userProfile.name}
+                      onError={() => setImageError(true)}
+                      style={{ width: '100%', height: '100%', borderRadius: 'inherit' }}
+                    />
+                  ) : (
+                    <User size={20} style={{ color: '#666' }} />
+                  )}
+                </div>
                 <div className="user-info">
                   <span className="user-name">{userProfile.name}</span>
                   <span className="user-email">{userProfile.email}</span>

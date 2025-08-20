@@ -170,3 +170,16 @@ export const fetchUserProfile = async (): Promise<UserProfile> => {
   }
   return response.json();
 };
+
+export const fetchUserPaymentStatus = async () => {
+  const { code } = await chrome.storage.local.get('code');
+  if (!code) throw new Error('No code found');
+
+  const response = await fetch(`${API_BASE_URL}/extension/payments?code=${code}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch payment status');
+  }
+  
+  return response.json();
+};

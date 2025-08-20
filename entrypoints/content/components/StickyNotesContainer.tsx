@@ -9,13 +9,8 @@ import {
   fetchBoards,
   fetchNotes,
 } from '../../../services/api';
-import { StickyNote, TipTapContent } from '../../../types';
+import { StickyNote, TipTapContent, Board } from '../../../types';
 import { playBubbleSound } from '../utils/soundUtils';
-
-interface Board {
-  id: string;
-  name: string;
-}
 
 const StickyNotesContainer: React.FC = () => {
   const [notes, setNotes] = useState<StickyNote[]>([]);
@@ -35,11 +30,7 @@ const StickyNotesContainer: React.FC = () => {
   const loadBoards = async () => {
     try {
       const data = await fetchBoards();
-      const formattedBoards = data?.map((board: any) => ({
-        id: board._id,
-        name: board.boardName,
-      }));
-      setBoards(formattedBoards);
+      setBoards(data || []);
     } catch (error) {
       console.error('Error fetching boards:', error);
     }

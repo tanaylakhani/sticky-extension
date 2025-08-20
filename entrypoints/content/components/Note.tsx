@@ -24,16 +24,9 @@ import {
 import Tiptap from './Tiptap';
 import { updateNote, uploadImage } from '../../../services/api';
 import debounce from 'lodash/debounce';
-import { StickyNote } from '../../../types';
+import { StickyNote, Board } from '../../../types';
 import { INoteSize } from '../../../enums';
 import { playBubbleSound, playOinkSound } from '../utils/soundUtils';
-
-// import bubbleSound from '../../../assets/sounds/bubble.wav';
-
-interface Board {
-  id: string;
-  name: string;
-}
 
 interface NoteProps {
   id: string;
@@ -375,16 +368,16 @@ const Note: React.FC<NoteProps> = ({
                 <div className="board-menu">
                   {boards.map((board) => (
                     <button
-                      key={board.id}
-                      className={`board-menu-item ${note.boardId === board.id ? 'active' : ''
+                      key={board._id}
+                      className={`board-menu-item ${note.boardId === board._id ? 'active' : ''
                         }`}
                       onClick={() => {
                         playBubbleSound();
-                        handleBoardSelect(board.id);
+                        handleBoardSelect(board._id);
                       }}
                       onMouseDown={(e) => e.stopPropagation()}
                     >
-                      {board.name}
+                      {board.boardName}
                     </button>
                   ))}
                 </div>
