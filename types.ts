@@ -11,6 +11,7 @@ export interface StickyNote {
   text: string | TipTapContent;
   color: string;
   size?: INoteSize;
+  title?: string;
 }
 
 export interface TipTapContent {

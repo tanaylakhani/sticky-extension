@@ -44,11 +44,29 @@ export default defineContentScript({
       height: 100%;
       min-height: 200px;
       padding: 0;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
       z-index: 10000;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .note-content-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: none;
+      border-radius: 12px;
+      transform-origin: center center;
+      transform: scale(1) rotate(0deg);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .note-content-wrapper.dragging {
+      transform: scale(0.75) rotate(-4deg);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sticky-note * {
@@ -59,15 +77,19 @@ export default defineContentScript({
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 12px;
+      padding: 8px 16px;
       margin: 0;
       border-radius: 12px 12px 0 0;
       background-color: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       flex-shrink: 0;
-      cursor: move;
+      cursor: grab;
       user-select: none;
+    }
+
+    .note-header:active {
+      cursor: grabbing;
     }
 
     .note-header-left {
@@ -102,33 +124,58 @@ export default defineContentScript({
       position: absolute;
       top: 100%;
       left: 0;
-      margin-top: 4px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      min-width: 150px;
-      z-index: 1000;
-      overflow: hidden;
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      min-width: 160px;
+      max-width: 200px;
+      max-height: 120px;
+      z-index: 999999;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 4px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .board-menu::-webkit-scrollbar {
+      display: none;
     }
 
     .board-menu-item {
       width: 100%;
-      padding: 8px 12px;
+      padding: 10px 12px;
       border: none;
       background: none;
       text-align: left;
       cursor: pointer;
       color: #333;
-      transition: background-color 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .board-menu-item:hover {
-      background-color: rgba(0, 0, 0, 0.05);
+      background-color: rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
     }
 
     .board-menu-item.active {
-      background-color: rgba(0, 0, 0, 0.1);
-      font-weight: 500;
+      background-color: rgba(107, 105, 249, 0.1);
+      color: #6b69f9;
+      font-weight: 600;
+    }
+
+    .board-menu-item.active:hover {
+      background-color: rgba(107, 105, 249, 0.15);
     }
 
     .color-picker-button {
@@ -172,8 +219,9 @@ export default defineContentScript({
 
     .editor-toolbar {
       display: flex;
-      gap: 4px;
-      padding: 8px 12px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
       border-top: 1px solid rgba(255, 255, 255, 0.2);
       margin-top: auto;
       flex-shrink: 0;
@@ -181,6 +229,18 @@ export default defineContentScript({
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       border-radius: 0 0 12px 12px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 4px;
+      align-items: center;
     }
 
     .toolbar-button {
@@ -252,53 +312,76 @@ export default defineContentScript({
       pointer-events: none;
     }
 
-    .focused {
+    .note-content-wrapper.focused {
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
     }
 
-    /* Color-specific styles with transparency and blur effects */
-    .sticky-note.GREEN {
-      background-color: rgba(172, 235, 191, 0.85);
+    /* Color-specific styles with dashboard design and border bottom effect */
+    .sticky-note.GREEN .note-content-wrapper {
+      background: linear-gradient(to right, rgba(172, 235, 191, 0.5), rgba(172, 235, 191, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #2a5a35;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #ACEBBF;
+      color: #000000;
     }
 
-    .sticky-note.BLUE {
-      background-color: rgba(161, 212, 250, 0.85);
+    .sticky-note.BLUE .note-content-wrapper {
+      background: linear-gradient(to right, rgba(161, 212, 250, 0.5), rgba(161, 212, 250, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #1a4971;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #A1D4FA;
+      color: #000000;
     }
 
-    .sticky-note.RED {
-      background-color: rgba(255, 166, 126, 0.85);
+    .sticky-note.RED .note-content-wrapper {
+      background: linear-gradient(to right, rgba(255, 166, 126, 0.5), rgba(255, 166, 126, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #8b3f1d;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #FFA67E;
+      color: #000000;
     }
 
-    .sticky-note.YELLOW {
-      background-color: rgba(255, 207, 124, 0.85);
+    .sticky-note.YELLOW .note-content-wrapper {
+      background: linear-gradient(to right, rgba(255, 207, 124, 0.5), rgba(255, 207, 124, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #8b6534;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #FFCF7C;
+      color: #000000;
     }
 
-    .sticky-note.PURPLE {
-      background-color: rgba(216, 184, 255, 0.85);
+    .sticky-note.PURPLE .note-content-wrapper {
+      background: linear-gradient(to right, rgba(216, 184, 255, 0.5), rgba(216, 184, 255, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #5b3a80;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #D8B8FF;
+      color: #000000;
     }
 
-    .sticky-note.GRAY {
-      background-color: rgba(210, 220, 228, 0.85);
+    .sticky-note.GRAY .note-content-wrapper {
+      background: linear-gradient(to right, rgba(210, 220, 228, 0.5), rgba(210, 220, 228, 0.4));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #3e4e5e;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12), 
+        0 2px 6px rgba(0, 0, 0, 0.08), 
+        0 4px 0 0 #D2DCE4;
+      color: #000000;
     }
 
     /* Add size classes */

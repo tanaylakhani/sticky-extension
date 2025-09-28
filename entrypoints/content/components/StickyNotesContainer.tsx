@@ -30,7 +30,19 @@ const StickyNotesContainer: React.FC = () => {
   const loadBoards = async () => {
     try {
       const data = await fetchBoards();
-      setBoards(data || []);
+      const boards = data || [];
+      setBoards(boards);
+      
+      // Handle board selection logic
+      if (boards.length > 0) {
+        const { lastSelectedBoardId } = await chrome.storage.local.get('lastSelectedBoardId');
+        const isValidSelection = boards.some(board => board._id === lastSelectedBoardId);
+        
+        if (!lastSelectedBoardId || !isValidSelection) {
+          // No board selected or invalid selection - select the first board
+          await chrome.storage.local.set({ lastSelectedBoardId: boards[0]._id });
+        }
+      }
     } catch (error) {
       console.error('Error fetching boards:', error);
     }
@@ -49,6 +61,7 @@ const StickyNotesContainer: React.FC = () => {
         websiteUrl: note.websiteUrl,
         boardId: note.boardId,
         size: note.data.data.size,
+        title: note.data.data.title,
       }));
       setNotes(notes);
 
@@ -61,12 +74,19 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
+  const getRandomColor = () => {
+    const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const createNoteOnServer = async (
     text: string,
     position: { x: number; y: number }
   ) => {
     try {
       const noteId = uuidv4();
+      const randomColor = getRandomColor();
+
 
       // Create TipTap JSON content
       const content: TipTapContent = {
@@ -88,17 +108,25 @@ const StickyNotesContainer: React.FC = () => {
         'lastSelectedBoardId'
       );
 
+      // Determine the board ID to use
+      let boardId = lastSelectedBoardId;
+      if (!boardId && boards.length === 1) {
+        // If no board is selected but there's exactly one board, use it
+        boardId = boards[0]._id;
+        await chrome.storage.local.set({ lastSelectedBoardId: boardId });
+      }
+
       await createNote({
         websiteUrl: window.location.href,
-        boardId: lastSelectedBoardId || null,
+        boardId: boardId || null,
         data: {
           id: noteId,
           type: 'note',
           position: position,
           data: {
             content: content,
-            color: 'GREEN',
-            title: '',
+            color: randomColor,
+            title: getSmartTitle(),
           },
         },
       });
@@ -110,13 +138,33 @@ const StickyNotesContainer: React.FC = () => {
     }
   };
 
+  // Helper function for smart title (reusable)
+  const getSmartTitle = () => {
+    try {
+      const pageTitle = document.title;
+      const websiteUrl = window.location.href;
+      
+      // Use page title if available and meaningful, otherwise use website name
+      if (pageTitle && pageTitle.trim() && pageTitle !== websiteUrl) {
+        return pageTitle.trim();
+      } else {
+        return new URL(websiteUrl).hostname;
+      }
+    } catch (error) {
+      return new URL(window.location.href).hostname;
+    }
+  };
+
   // Optimistic create: add note to UI immediately, then sync with server
   const handleOptimisticCreate = async (
     text: string,
     position: { x: number; y: number }
   ) => {
     const noteId = uuidv4();
+    const randomColor = getRandomColor();
     setLastCreatedNoteId(noteId);
+    
+    const smartTitle = getSmartTitle();
     
     // Create TipTap JSON content
     const content: TipTapContent = {
@@ -138,15 +186,24 @@ const StickyNotesContainer: React.FC = () => {
       'lastSelectedBoardId'
     );
 
+    // Determine the board ID to use
+    let boardId = lastSelectedBoardId;
+    if (!boardId && boards.length === 1) {
+      // If no board is selected but there's exactly one board, use it
+      boardId = boards[0]._id;
+      await chrome.storage.local.set({ lastSelectedBoardId: boardId });
+    }
+
     // Create optimistic note object
     const optimisticNote: StickyNote = {
       id: noteId,
       position: position,
       text: content,
-      color: 'GREEN',
+      color: randomColor,
       websiteUrl: window.location.href,
-      boardId: lastSelectedBoardId || null,
+      boardId: boardId || null,
       size: 'small',
+      title: smartTitle,
     };
 
     // Add to UI immediately using functional updates to avoid stale state
@@ -169,15 +226,15 @@ const StickyNotesContainer: React.FC = () => {
     try {
       await createNote({
         websiteUrl: window.location.href,
-        boardId: lastSelectedBoardId || null,
+        boardId: boardId || null,
         data: {
           id: noteId,
           type: 'note',
           position: position,
           data: {
             content: content,
-            color: 'GREEN',
-            title: '',
+            color: randomColor,
+            title: getSmartTitle(),
           },
         },
       });

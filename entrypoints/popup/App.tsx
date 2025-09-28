@@ -61,6 +61,25 @@ const App = () => {
       setIsValidCode(true);
       setImageError(false); // Reset image error when new profile loads
       chrome.storage.local.set({ code: userCode });
+      
+      // Handle board selection logic
+      if (boards.length > 0) {
+        const { lastSelectedBoardId } = await chrome.storage.local.get('lastSelectedBoardId');
+        const isValidSelection = boards.some(board => board._id === lastSelectedBoardId);
+        
+        if (!lastSelectedBoardId || !isValidSelection) {
+          // No board selected or invalid selection - select the first board
+          await chrome.storage.local.set({ lastSelectedBoardId: boards[0]._id });
+          setLastSelectedBoardId(boards[0]._id);
+        } else {
+          // Valid selection exists
+          setLastSelectedBoardId(lastSelectedBoardId);
+        }
+      } else {
+        // No boards exist - clear any existing board selection
+        await chrome.storage.local.set({ lastSelectedBoardId: null });
+        setLastSelectedBoardId(null);
+      }
     } catch (error) {
       setIsValidCode(false);
       setBoards([]);
@@ -162,13 +181,19 @@ const App = () => {
 
   useEffect(() => {
     chrome.storage.local.get(['code', 'lastSelectedBoardId', 'showDraggableIcon'], (result: any) => {
-      console.log(result);
+      console.log('Storage result:', result);
       if (result.code) {
         setCode(result.code);
         setIsValidCode(true);
         loadBoards(result.code);
       }
-      setLastSelectedBoardId(result.lastSelectedBoardId || null);
+      // Clear any "null" string board IDs (from old Default board)
+      if (result.lastSelectedBoardId === null || result.lastSelectedBoardId === 'null') {
+        chrome.storage.local.set({ lastSelectedBoardId: null });
+        setLastSelectedBoardId(null);
+      } else {
+        setLastSelectedBoardId(result.lastSelectedBoardId || null);
+      }
       setShowDraggableIcon(result.showDraggableIcon !== false); // Default to true
     });
   }, []);
@@ -287,28 +312,34 @@ const App = () => {
               </>
             ) : (
               <>
-                {boards?.map((board) => (
-                  <div
-                    key={board._id}
-                    className={`board-item ${
-                      board._id === lastSelectedBoardId ? 'selected' : ''
-                    }`}
-                    onClick={() => handleBoardClick(board._id)}
-                  >
-                    <div className="board-content">
-                      <div className="board-indicator"></div>
-                      <span className="board-name">{board.boardName}</span>
-                    </div>
-                    <ExternalLink
-                      className="board-action"
-                      size={16}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBoardRedirect(board._id);
-                      }}
-                    />
+                {boards.length === 0 ? (
+                  <div className="no-boards-message">
+                    <span>No boards found. Create your first board!</span>
                   </div>
-                ))}
+                ) : (
+                  boards.map((board) => (
+                    <div
+                      key={board._id}
+                      className={`board-item ${
+                        board._id === lastSelectedBoardId ? 'selected' : ''
+                      }`}
+                      onClick={() => handleBoardClick(board._id)}
+                    >
+                      <div className="board-content">
+                        <div className="board-indicator"></div>
+                        <span className="board-name">{board.boardName}</span>
+                      </div>
+                      <ExternalLink
+                        className="board-action"
+                        size={16}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBoardRedirect(board._id);
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
               </>
             )}
           </div>

@@ -1,4 +1,4 @@
-const IS_PRODUCTION = true;
+const IS_PRODUCTION = false;
 
 export const BASE_URL = IS_PRODUCTION
   ? 'https://www.thestickyapp.com'

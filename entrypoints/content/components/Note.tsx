@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Draggable from 'react-draggable';
+import { motion } from 'motion/react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -99,13 +100,24 @@ const Note: React.FC<NoteProps> = ({
   const colors = ['GREEN', 'BLUE', 'RED', 'YELLOW', 'PURPLE', 'GRAY'];
 
   const colorMap = {
-    GREEN: '#2a5a35',
-    BLUE: '#1a4971',
-    RED: '#8b3f1d',
-    YELLOW: '#8b6534',
-    PURPLE: '#5b3a80',
-    GRAY: '#3e4e5e',
+    GREEN: '#ACEBBF',
+    BLUE: '#A1D4FA', 
+    RED: '#FFA67E',
+    YELLOW: '#FFCF7C',
+    PURPLE: '#D8B8FF',
+    GRAY: '#D2DCE4',
   };
+
+  // Dashboard color functions
+  function hexToRgba(hex: string, opacity: number) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+  }
 
   const handleBoardSelect = async (boardId: string) => {
     try {
@@ -161,7 +173,7 @@ const Note: React.FC<NoteProps> = ({
             data: {
               content: content,
               color: localColor,
-              title: '',
+              title: note.title || '',
             },
           },
         });
@@ -308,9 +320,11 @@ const Note: React.FC<NoteProps> = ({
     >
       <div
         ref={noteRef}
-        className={`sticky-note ${localColor} ${isTextAreaInFocus ? 'focused' : ''
-          } ${currentSize}`}
+        className={`sticky-note ${localColor} ${currentSize}`}
       >
+        <div
+          className={`note-content-wrapper ${isTextAreaInFocus ? 'focused' : ''} ${isDragging ? 'dragging' : ''}`}
+        >
                 <div className="note-header">
           <div className="note-header-left">
             <div className="color-menu-container" ref={colorMenuRef}>
@@ -351,66 +365,41 @@ const Note: React.FC<NoteProps> = ({
                 </div>
               )}
             </div>
-            <div className="board-menu-container" ref={menuRef}>
-              <button
-                className="board-menu-button"
-                onClick={() => {
-                  playBubbleSound();
-                  setShowBoardMenu(!showBoardMenu);
-                }}
-                onMouseEnter={playOinkSound}
-                onMouseDown={(e) => e.stopPropagation()}
-                title="Select board"
-              >
-                <FaEllipsisV />
-              </button>
-              {showBoardMenu && (
-                <div className="board-menu">
-                  {boards.map((board) => (
-                    <button
-                      key={board._id}
-                      className={`board-menu-item ${note.boardId === board._id ? 'active' : ''
-                        }`}
-                      onClick={() => {
-                        playBubbleSound();
-                        handleBoardSelect(board._id);
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                    >
-                      {board.boardName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div
-              className="resize-button-container"
-              title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
-            >
-              <button
-                className="resize-button"
-                onClick={() => {
-                  setIsClicking(true);
-                  playBubbleSound();
-                  handleSizeToggle();
-                  // Reset after a short delay
-                  setTimeout(() => setIsClicking(false), 100);
-                }}
-                onMouseEnter={() => {
-                  if (!isClicking) {
-                    playOinkSound();
-                  }
-                }}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {currentSize === INoteSize.SMALL ? (
-                  <FaExpandAlt />
-                ) : (
-                  <FaCompressAlt />
+            {boards.length > 1 && (
+              <div className="board-menu-container" ref={menuRef}>
+                <button
+                  className="board-menu-button"
+                  onClick={() => {
+                    playBubbleSound();
+                    setShowBoardMenu(!showBoardMenu);
+                  }}
+                  onMouseEnter={playOinkSound}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title="Select board"
+                >
+                  <FaEllipsisV />
+                </button>
+                {showBoardMenu && (
+                  <div className="board-menu">
+                    {boards.map((board) => (
+                      <button
+                        key={board._id}
+                        className={`board-menu-item ${note.boardId === board._id ? 'active' : ''
+                          }`}
+                        onClick={() => {
+                          playBubbleSound();
+                          handleBoardSelect(board._id);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {board.boardName}
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </button>
-            </div>
+              </div>
+            )}
+
           </div>
           
           <button
@@ -436,73 +425,103 @@ const Note: React.FC<NoteProps> = ({
               id={note.id}
               isUploading={isUploading}
             />
+            {/* Bottom Toolbar */}
             <div className="editor-toolbar">
-              <button
-                onClick={() => {
-                  playBubbleSound();
-                  editor.chain().focus().toggleBold().run();
-                }}
-                onMouseEnter={playOinkSound}
-                className={`toolbar-button ${editor.isActive('bold') ? 'active' : ''
-                  }`}
-              >
-                <FaBold />
-              </button>
-              <button
-                onClick={() => {
-                  playBubbleSound();
-                  editor.chain().focus().toggleItalic().run();
-                }}
-                onMouseEnter={playOinkSound}
-                className={`toolbar-button ${editor.isActive('italic') ? 'active' : ''
-                  }`}
-              >
-                <FaItalic />
-              </button>
-              <button
-                onClick={() => {
-                  playBubbleSound();
-                  editor.chain().focus().toggleUnderline().run();
-                }}
-                onMouseEnter={playOinkSound}
-                className={`toolbar-button ${editor.isActive('underline') ? 'active' : ''
-                  }`}
-              >
-                <FaUnderline />
-              </button>
-              <button
-                onClick={() => {
-                  playBubbleSound();
-                  editor.chain().focus().toggleBulletList().run();
-                }}
-                onMouseEnter={playOinkSound}
-                className={`toolbar-button ${editor.isActive('bulletList') ? 'active' : ''
-                  }`}
-              >
-                <FaListUl />
-              </button>
-              <button
-                onClick={() => {
-                  playBubbleSound();
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) {
-                      handleImageUpload(file);
+              <div className="toolbar-left">
+                <button
+                  onClick={() => {
+                    playBubbleSound();
+                    editor.chain().focus().toggleBold().run();
+                  }}
+                  onMouseEnter={playOinkSound}
+                  className={`toolbar-button ${editor.isActive('bold') ? 'active' : ''
+                    }`}
+                >
+                  <FaBold />
+                </button>
+                <button
+                  onClick={() => {
+                    playBubbleSound();
+                    editor.chain().focus().toggleItalic().run();
+                  }}
+                  onMouseEnter={playOinkSound}
+                  className={`toolbar-button ${editor.isActive('italic') ? 'active' : ''
+                    }`}
+                >
+                  <FaItalic />
+                </button>
+                <button
+                  onClick={() => {
+                    playBubbleSound();
+                    editor.chain().focus().toggleUnderline().run();
+                  }}
+                  onMouseEnter={playOinkSound}
+                  className={`toolbar-button ${editor.isActive('underline') ? 'active' : ''
+                    }`}
+                >
+                  <FaUnderline />
+                </button>
+                <button
+                  onClick={() => {
+                    playBubbleSound();
+                    editor.chain().focus().toggleBulletList().run();
+                  }}
+                  onMouseEnter={playOinkSound}
+                  className={`toolbar-button ${editor.isActive('bulletList') ? 'active' : ''
+                    }`}
+                >
+                  <FaListUl />
+                </button>
+              </div>
+              
+              <div className="toolbar-right">
+                <button
+                  onClick={() => {
+                    playBubbleSound();
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        handleImageUpload(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  onMouseEnter={playOinkSound}
+                  className="toolbar-button"
+                >
+                  <FaImage />
+                </button>
+                
+                <button
+                  className="toolbar-button"
+                  onClick={() => {
+                    setIsClicking(true);
+                    playBubbleSound();
+                    handleSizeToggle();
+                    setTimeout(() => setIsClicking(false), 100);
+                  }}
+                  onMouseEnter={() => {
+                    if (!isClicking) {
+                      playOinkSound();
                     }
-                  };
-                  input.click();
-                }}
-                onMouseEnter={playOinkSound}
-                className="toolbar-button"
-              >
-                <FaImage />
-              </button>
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title={currentSize === INoteSize.SMALL ? 'Expand' : 'Shrink'}
+                >
+                  {currentSize === INoteSize.SMALL ? (
+                    <FaExpandAlt />
+                  ) : (
+                    <FaCompressAlt />
+                  )}
+                </button>
+              </div>
             </div>
           </>
         )}
+        </div>
       </div>
     </Draggable>
   );

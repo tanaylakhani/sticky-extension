@@ -223,6 +223,13 @@
   cursor: pointer;
 }
 
+.no-boards-message {
+  padding: 20px 16px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
 .login-container {
   display: flex;
   flex-direction: column;

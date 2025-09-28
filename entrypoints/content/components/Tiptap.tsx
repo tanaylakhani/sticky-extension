@@ -126,6 +126,8 @@ const Tiptap: React.FC<TiptapProps> = ({
         data-note-id={id}
         onFocus={() => setIsTextAreaInFocus(true)}
         onBlur={() => setIsTextAreaInFocus(false)}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       />
     </div>
   );
