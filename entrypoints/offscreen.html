@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Offscreen Document</title>
+</head>
+<body>
+  <script>
+    chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+      if (message.action === 'play_audio') {
+        try {
+          const audio = new Audio();
+          
+          // Set the audio source based on the sound type
+          if (message.sound === 'bubble') {
+            audio.src = chrome.runtime.getURL('assets/sounds/bubble.mp3');
+          } else if (message.sound === 'oink') {
+            audio.src = chrome.runtime.getURL('assets/sounds/oink.wav');
+          }
+          
+          // Play the audio
+          await audio.play();
+          
+          sendResponse({ success: true });
+        } catch (error) {
+          console.error('Error playing audio:', error);
+          sendResponse({ success: false, error: error.message });
+        }
+      }
+      
+      return true; // Will respond asynchronously
+    });
+  </script>
+</body>
+</html>
